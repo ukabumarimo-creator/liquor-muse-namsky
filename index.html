@@ -2,15 +2,23 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>BAR LIQUOR MUSEUM Namba Skyo</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{ margin:0; padding:0; box-sizing:border-box; }
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root{ --gold:#d4af37; --bg:#0b0b0b; --card:#161616; --text:#f5f5f5; --accent:#ff4b2b; }
-body{ font-family:'Noto Serif JP', serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+body{ 
+  font-family:'Noto Serif JP', serif; 
+  background:var(--bg); 
+  color:var(--text); 
+  min-height:100vh; 
+  line-height: 1.6;
+}
+
 .background{
   position:fixed;
   inset:0;
@@ -21,83 +29,109 @@ body{ font-family:'Noto Serif JP', serif; background:var(--bg); color:var(--text
   background-position:center;
   z-index:-1;
 }
-header{ position:relative; padding:35px 20px 20px; }
-header h1{ color:var(--gold); letter-spacing:4px; font-size:2.2rem; }
-header p{ margin-top:10px; color:#aaa; }
-#logoutBtn{ display:none; position:absolute; top:35px; right:20px; background:#1a1a1a; color:var(--gold); border:1px solid var(--gold); padding:10px 16px; border-radius:999px; cursor:pointer; }
+
+header{ padding:40px 20px 20px; text-align: center; }
+header h1{ color:var(--gold); letter-spacing:4px; font-size:1.8rem; }
+header p{ margin-top:8px; color:#aaa; font-size: 0.9rem; }
+
+#logoutBtn{ display:none; position:absolute; top:20px; right:20px; background:rgba(26,26,26,0.8); color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:999px; font-size: 0.8rem; }
 #logoutBtn.show{ display:block; }
-.top-area{ position:sticky; top:0; z-index:10; background:rgba(10,10,10,0.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(212,175,55,0.1); }
-.search-wrap{ padding:15px 20px 10px; }
-.price-wrap{ padding:0 20px 15px; }
-.search{ width:100%; border:none; background:#1a1a1a; padding:15px; border-radius:14px; color:white; font-size:1rem; border: 1px solid transparent; }
-.search:focus{ outline: none; border-color: var(--gold); }
-.tag-area{ display:flex; gap:10px; overflow-x:auto; padding:0 20px 20px; }
+
+/* 検索エリアの固定（スマホで重要） */
+.top-area{ 
+  position:sticky; 
+  top:0; 
+  z-index:100; 
+  background:rgba(10,10,10,0.95); 
+  backdrop-filter:blur(15px); 
+  border-bottom:1px solid rgba(212,175,55,0.2);
+  padding-bottom: 10px;
+}
+.search-wrap{ padding:15px 15px 5px; display: flex; flex-direction: column; gap: 8px; }
+.search{ 
+  width:100%; 
+  border:none; 
+  background:#222; 
+  padding:12px 15px; 
+  border-radius:12px; 
+  color:white; 
+  font-size:1rem; 
+  border: 1px solid #333;
+  appearance: none; /* iOS対策 */
+}
+.search:focus{ outline: none; border-color: var(--gold); background: #2a2a2a; }
+
+.tag-area{ display:flex; gap:8px; overflow-x:auto; padding:10px 15px; scrollbar-width: none; }
 .tag-area::-webkit-scrollbar{ display:none; }
-.tag-btn{ flex:none; border:1px solid var(--gold); background:#141414; color:var(--gold); padding:10px 15px; border-radius:999px; cursor:pointer; white-space:nowrap; }
-.tag-btn.active{ background:var(--gold); color:black; }
-.menu-grid{ display:grid; grid-template-columns:1fr; gap:20px; padding:20px 20px 120px; }
-.card{ background:rgba(20,20,20,0.96); border-radius:22px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); transition: transform 0.3s; }
-.card img{ width:100%; height:240px; object-fit:cover; }
+.tag-btn{ flex:none; border:1px solid rgba(212,175,55,0.5); background:rgba(20,20,20,0.6); color:var(--gold); padding:8px 16px; border-radius:999px; font-size:0.85rem; transition: 0.2s; }
+.tag-btn.active{ background:var(--gold); color:black; border-color: var(--gold); font-weight: bold; }
+
+/* メイングリッド */
+.menu-grid{ 
+  display:grid; 
+  grid-template-columns: 1fr; /* スマホは1列 */
+  gap:25px; 
+  padding:20px 15px 120px; 
+}
+@media(min-width:768px){ .menu-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media(min-width:1024px){ .menu-grid{ grid-template-columns: repeat(3, 1fr); max-width: 1200px; margin: 0 auto; } }
+
+/* カードデザイン */
+.card{ background:rgba(25,25,25,0.8); border-radius:24px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.card img{ width:100%; height:260px; object-fit:cover; }
 .card-content{ padding:20px; }
-.type{ display:inline-block; border:1px solid var(--gold); color:var(--gold); padding:5px 10px; border-radius:999px; font-size:0.75rem; margin-bottom:12px; }
-.title{ font-size:1.5rem; margin-bottom:10px; font-weight: 700; }
-.price{ color:var(--gold); margin-bottom:14px; font-size:1.1rem; }
-.description{ color:#ddd; line-height:1.8; margin-bottom:16px; font-size: 0.9rem; }
-.tags{ display:flex; flex-wrap:wrap; gap:8px; }
-.small-tag{ background:#222; color:#ddd; padding:7px 10px; border-radius:999px; font-size:0.72rem; }
-.card-buttons{ display:flex; gap:10px; margin-top:18px; }
-.edit-btn, .delete-btn{ flex:1; border:none; padding:12px; border-radius:12px; cursor:pointer; font-weight:bold; }
+.type{ display:inline-block; background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 12px; border-radius:999px; font-size:0.7rem; margin-bottom:12px; font-weight: bold; border: 1px solid var(--gold); }
+.title{ font-size:1.4rem; margin-bottom:8px; font-weight: 700; color: #fff; }
+.price{ color:var(--gold); margin-bottom:15px; font-size:1.2rem; font-weight: bold; }
+.description{ color:#bbb; line-height:1.7; margin-bottom:18px; font-size: 0.95rem; }
+.tags{ display:flex; flex-wrap:wrap; gap:6px; }
+.small-tag{ background:#333; color:#ccc; padding:6px 12px; border-radius:8px; font-size:0.75rem; }
+
+/* 管理用ボタン */
+.card-buttons{ display:flex; gap:10px; margin-top:20px; border-top: 1px solid #333; padding-top: 15px; }
+.edit-btn, .delete-btn{ flex:1; border:none; padding:14px; border-radius:12px; cursor:pointer; font-weight:bold; font-size: 0.9rem; }
 .edit-btn{ background:var(--gold); color:black; }
-.delete-btn{ background:#2a2a2a; color:white; }
-.fab{ position:fixed; right:20px; bottom:20px; width:60px; height:60px; border-radius:50%; border:none; background:var(--gold); color:black; font-size:1.5rem; cursor:pointer; z-index:200; }
-.modal{ position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:flex-end; z-index:300; backdrop-filter: blur(5px); }
+.delete-btn{ background:#333; color:#ff6b6b; }
+
+.fab{ position:fixed; right:20px; bottom:30px; width:64px; height:64px; border-radius:50%; border:none; background:var(--gold); color:black; font-size:1.8rem; cursor:pointer; z-index:200; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+
+/* モーダル調整（スマホで見やすく） */
+.modal{ position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:flex-end; z-index:300; backdrop-filter: blur(10px); }
 .modal.active{ display:flex; }
-.modal-content{ width:100%; background:#121212; border-radius:25px 25px 0 0; padding:25px; max-height:90vh; overflow-y:auto; }
-.modal-content h2{ color:var(--gold); margin-bottom:20px; }
-.form-group{ margin-bottom:16px; }
-.form-group label { display: block; font-size: 0.8rem; color: var(--gold); margin-bottom: 5px; }
-.form-group input, .form-group textarea, .form-group select{ width:100%; background:#1d1d1d; border:1px solid #333; padding:14px; border-radius:12px; color:white; }
-.image-preview{ width:100%; height:200px; border-radius:18px; object-fit:cover; margin-top:15px; display:none; }
-.save-btn{ width:100%; border:none; background:var(--gold); color:black; padding:15px; border-radius:14px; font-weight:bold; cursor:pointer; }
-@media(min-width:900px){ .menu-grid{ grid-template-columns:repeat(3,1fr); max-width: 1200px; margin: 0 auto; } .modal{ justify-content:center; align-items:center; } .modal-content{ width:500px; border-radius:24px; } }
+.modal-content{ width:100%; background:#1a1a1a; border-radius:30px 30px 0 0; padding:30px 20px 50px; max-height:92vh; overflow-y:auto; }
+.form-group{ margin-bottom:20px; }
+.form-group label { display: block; font-size: 0.85rem; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
+.form-group input, .form-group textarea, .form-group select{ width:100%; background:#252525; border:1px solid #444; padding:15px; border-radius:14px; color:white; font-size:1rem; }
+.save-btn{ width:100%; border:none; background:var(--gold); color:black; padding:18px; border-radius:16px; font-weight:bold; font-size:1.1rem; cursor:pointer; margin-top: 10px; }
 </style>
 </head>
 <body>
 
 <div class="background"></div>
 <header>
-
   <h1>お酒の美術館　なんばスカイオ店</h1>
-
-  <p>
-    BAR LIQUOR MUSEUM Namba Skyo
-  </p>
-
-  <button id="logoutBtn">
-    戻る
-  </button>
-
+  <p>BAR LIQUOR MUSEUM Namba Skyo</p>
+  <button id="logoutBtn">管理者終了</button>
 </header>
 
 <div class="top-area">
   <div class="search-wrap">
-    <input type="text" class="search" id="searchInput" placeholder="お酒の名前で検索">
-  </div>
-  <div class="price-wrap">
-    <input type="number" id="priceSearch" class="search" placeholder="価格帯で検索 (例: 12000)">
+    <input type="text" class="search" id="searchInput" placeholder="銘柄で検索...">
+    <input type="number" id="priceSearch" class="search" placeholder="価格帯(例:12000)">
   </div>
   <div class="tag-area" id="typeArea"></div>
   <div class="tag-area" id="tagArea"></div>
 </div>
 
 <section class="menu-grid" id="menuGrid"></section>
+
 <button class="fab" id="adminBtn">⚙</button>
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <h2 id="modalTitle">お酒を追加</h2>
-    <div class="form-group"><label>名前</label><input type="text" id="nameInput"></div>
-    <div class="form-group"><label>写真（容量制限なし）</label><input type="file" id="imageInput" accept="image/*"><img id="preview" class="image-preview"></div>
+    <h2 id="modalTitle" style="margin-bottom:25px; color:var(--gold);">Menu Item</h2>
+    <div class="form-group"><label>お酒の名前</label><input type="text" id="nameInput"></div>
+    <div class="form-group"><label>写真を選択</label><input type="file" id="imageInput" accept="image/*"><img id="preview" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin-top:15px; display:none;"></div>
     <div class="form-group"><label>カテゴリー</label><select id="typeInput">
       <option value="Whisky">Whisky</option><option value="Gin">Gin</option>
       <option value="Vodka">Vodka</option><option value="Rum">Rum</option>
@@ -105,22 +139,22 @@ header p{ margin-top:10px; color:#aaa; }
       <option value="Other Liqueur">Other Liqueur</option>
     </select></div>
     <div class="form-group"><label>価格 (円)</label><input type="number" id="priceInput"></div>
-    <div class="form-group"><label>タグ (カンマ区切り)</label><input type="text" id="tagsInput"></div>
+    <div class="form-group"><label>タグ (カンマ区切り)</label><input type="text" id="tagsInput" placeholder="スモーキー, 限定品 など"></div>
     <div class="form-group"><label>説明</label><textarea id="descInput" rows="4"></textarea></div>
-    <button class="save-btn" id="saveBtn">クラウドへ保存</button>
+    <button class="save-btn" id="saveBtn">クラウドに保存</button>
+    <button class="save-btn" style="background:#333; color:white; margin-top:10px;" onclick="document.getElementById('modal').classList.remove('active')">キャンセル</button>
   </div>
 </div>
 
 <div class="modal" id="adminModal">
-  <div class="modal-content">
-    <h2>管理モード認証</h2>
-    <div class="form-group"><input type="password" id="passwordInput" maxlength="4" placeholder="パスワード"></div>
-    <button class="save-btn" id="loginBtn">ログイン</button>
+  <div class="modal-content" style="padding-bottom:100px;">
+    <h2 style="margin-bottom:20px; color:var(--gold);">Admin Login</h2>
+    <div class="form-group"><input type="password" id="passwordInput" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="4桁のパスワード"></div>
+    <button class="save-btn" id="loginBtn">認証</button>
   </div>
 </div>
 
 <script>
-/* --- Supabase 設定 --- */
 const SUPABASE_URL = 'https://sqoyhsruvfcwwtiytykq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxb3loc3J1dmZjd3d0aXl0eWtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MDU5NjUsImV4cCI6MjA5NDM4MTk2NX0.2yCIxs0QboAF6ldGBTh-YI2t9m3rwFyedrc-NkFMXT4';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -136,39 +170,20 @@ const modal = document.getElementById("modal");
 const preview = document.getElementById("preview");
 const imageInput = document.getElementById("imageInput");
 
-/* --- 1. データ取得 --- */
 async function fetchDrinks() {
-  const { data, error } = await _supabase
-    .from('drinks')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) console.error('Fetch Error:', error);
-  else { drinks = data; render(); }
+  const { data, error } = await _supabase.from('drinks').select('*').order('created_at', { ascending: false });
+  if (!error) { drinks = data; render(); }
 }
 
-/* --- 2. 画像アップロード (Storage利用) --- */
 async function uploadImage(file) {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.${fileExt}`;
-  
-  const { data, error } = await _supabase.storage
-    .from('drink-images')
-    .upload(fileName, file);
-
-  if (error) {
-    alert("画像のアップロードに失敗しました。ポリシー設定を確認してください。");
-    return null;
-  }
-
-  const { data: publicData } = _supabase.storage
-    .from('drink-images')
-    .getPublicUrl(fileName);
-
+  const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, file);
+  if (error) return null;
+  const { data: publicData } = _supabase.storage.from('drink-images').getPublicUrl(fileName);
   return publicData.publicUrl;
 }
 
-/* --- 3. メイン描画 --- */
 function render(){
   menuGrid.innerHTML = "";
   const keyword = searchInput.value.toLowerCase();
@@ -191,7 +206,7 @@ function render(){
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <img src="${drink.image || ''}">
+      <img src="${drink.image || ''}" loading="lazy">
       <div class="card-content">
         <div class="type">${drink.type}</div>
         <div class="title">${drink.name}</div>
@@ -205,44 +220,38 @@ function render(){
   renderTypes(); renderTags();
 }
 
-/* --- 4. 保存・削除 --- */
 document.getElementById("saveBtn").addEventListener("click", async () => {
   const file = imageInput.files[0];
   let finalImageUrl = currentImageUrl;
-
-  // 新規画像があればアップロード
   if (file) {
     const uploadedUrl = await uploadImage(file);
     if (uploadedUrl) finalImageUrl = uploadedUrl;
   }
-
   const drinkData = {
     name: document.getElementById("nameInput").value,
-    image: finalImageUrl || "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1200&auto=format&fit=crop",
+    image: finalImageUrl,
     type: document.getElementById("typeInput").value,
     price: Number(document.getElementById("priceInput").value),
     description: document.getElementById("descInput").value,
     tags: document.getElementById("tagsInput").value.split(",").map(t=>t.trim()).filter(t=>t!=="")
   };
-
-  if (editingIndex === null) {
-    await _supabase.from('drinks').insert([drinkData]);
-  } else {
-    await _supabase.from('drinks').update(drinkData).eq('id', drinks[editingIndex].id);
-  }
-
+  if (editingIndex === null) await _supabase.from('drinks').insert([drinkData]);
+  else await _supabase.from('drinks').update(drinkData).eq('id', drinks[editingIndex].id);
   modal.classList.remove("active");
   fetchDrinks();
 });
 
 async function deleteDrink(i){
-  if(confirm("削除しますか？")){
-    await _supabase.from('drinks').delete().eq('id', drinks[i].id);
-    fetchDrinks();
+  const targetDrink = drinks[i];
+  if(!confirm(`${targetDrink.name}を削除しますか？`)) return;
+  if (targetDrink.image && targetDrink.image.includes('drink-images')) {
+    const fileName = targetDrink.image.split('/').pop();
+    await _supabase.storage.from('drink-images').remove([fileName]);
   }
+  await _supabase.from('drinks').delete().eq('id', targetDrink.id);
+  fetchDrinks();
 }
 
-/* --- UI操作・フィルタ --- */
 function renderTypes(){
   const types = ["Whisky", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur"];
   document.getElementById("typeArea").innerHTML = `<div class="tag-btn ${selectedType===''?'active':''}" onclick="selectedType='';render()">ALL</div>` + 
@@ -263,9 +272,9 @@ document.getElementById("loginBtn").addEventListener("click", () => {
 });
 document.getElementById("logoutBtn").addEventListener("click", () => { adminMode = false; document.getElementById("logoutBtn").classList.remove("show"); document.getElementById("adminBtn").style.background="var(--gold)"; render(); });
 
-function openAddModal(){ editingIndex = null; document.getElementById("modalTitle").textContent = "お酒を追加"; clearForm(); modal.classList.add("active"); }
+function openAddModal(){ editingIndex = null; document.getElementById("modalTitle").textContent = "Add New Drink"; clearForm(); modal.classList.add("active"); }
 function editDrink(i){
-  const d = drinks[i]; editingIndex = i; document.getElementById("modalTitle").textContent = "編集";
+  const d = drinks[i]; editingIndex = i; document.getElementById("modalTitle").textContent = "Edit Drink";
   document.getElementById("nameInput").value = d.name; document.getElementById("typeInput").value = d.type;
   document.getElementById("priceInput").value = d.price; document.getElementById("descInput").value = d.description;
   document.getElementById("tagsInput").value = d.tags ? d.tags.join(",") : ""; 
@@ -287,7 +296,10 @@ function clearForm(){
   imageInput.value = ""; preview.style.display="none"; currentImageUrl=""; 
 }
 searchInput.addEventListener("input", render); priceSearch.addEventListener("input", render);
-window.onclick = (e) => { if(e.target === modal) modal.classList.remove("active"); if(e.target === document.getElementById("adminModal")) document.getElementById("adminModal").classList.remove("active"); };
+window.onclick = (e) => { 
+  if(e.target === modal) modal.classList.remove("active"); 
+  if(e.target === document.getElementById("adminModal")) document.getElementById("adminModal").classList.remove("active"); 
+};
 
 fetchDrinks();
 </script>
