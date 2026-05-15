@@ -104,10 +104,12 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .form-group label { display: block; font-size: 0.85rem; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
 .form-group input, .form-group textarea, .form-group select{ width:100%; background:#252525; border:1px solid #444; padding:15px; border-radius:14px; color:white; font-size:1rem; }
 .save-btn{ width:100%; border:none; background:var(--gold); color:black; padding:18px; border-radius:16px; font-weight:bold; font-size:1.1rem; cursor:pointer; margin-top: 10px; }
+.loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:400; justify-content:center; align-items:center; color:var(--gold); font-weight:bold; }
 </style>
 </head>
 <body>
 
+<div class="loading-overlay" id="loadingOverlay">保存中...</div>
 <div class="background"></div>
 <header>
   <h1>お酒の美術館 なんばスカイオ店</h1>
@@ -133,7 +135,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
   <div class="modal-content">
     <h2 id="modalTitle" style="margin-bottom:25px; color:var(--gold);">Menu Item</h2>
     <div class="form-group"><label>お酒の名前</label><input type="text" id="nameInput"></div>
-    <div class="form-group"><label>写真を選択</label><input type="file" id="imageInput" accept="image/*"><img id="preview" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin-top:15px; display:none;"></div>
+    <div class="form-group"><label>写真 (自動圧縮されます)</label><input type="file" id="imageInput" accept="image/*"><img id="preview" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin-top:15px; display:none;"></div>
     
     <div class="form-group"><label>カテゴリー</label>
       <select id="typeInput" onchange="toggleSubTypeInput()">
@@ -192,16 +194,55 @@ const priceSearch = document.getElementById("priceSearch");
 const modal = document.getElementById("modal");
 const preview = document.getElementById("preview");
 const imageInput = document.getElementById("imageInput");
+const loadingOverlay = document.getElementById("loadingOverlay");
 
 async function fetchDrinks() {
   const { data, error } = await _supabase.from('drinks').select('*').order('created_at', { ascending: false });
   if (!error) { drinks = data; render(); }
 }
 
+/* --- 画像リサイズ＆圧縮ロジック --- */
+async function processImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 1200; // 最大横幅を1200pxに制限
+
+        if (width > max_size) {
+          height *= max_size / width;
+          width = max_size;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // WebP形式、画質0.7で書き出し
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/webp', 0.7);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadImage(file) {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.${fileExt}`;
-  const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, file);
+  loadingOverlay.style.display = "flex";
+  // 圧縮処理を実行
+  const compressedBlob = await processImage(file);
+  
+  const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
+  const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, compressedBlob);
+  
+  loadingOverlay.style.display = "none";
   if (error) return null;
   const { data: publicData } = _supabase.storage.from('drink-images').getPublicUrl(fileName);
   return publicData.publicUrl;
@@ -209,20 +250,14 @@ async function uploadImage(file) {
 
 function render(){
   menuGrid.innerHTML = "";
-  const keyword = searchInput.value.toLowerCase();
-  const inputPriceValue = priceSearch.value ? Number(priceSearch.value) : null;
-
   const filtered = drinks.filter(drink => {
-    const matchSearch = drink.name.toLowerCase().includes(keyword);
+    const matchSearch = drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
     const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
     const matchType = selectedType === "" || drink.type === selectedType;
     const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
-    
     let matchPrice = true;
-    if(inputPriceValue !== null) {
-      const inputTier = Math.floor(inputPriceValue / 1000);
-      const drinkTier = Math.floor(drink.price / 1000);
-      matchPrice = (inputTier === drinkTier);
+    if(priceSearch.value) {
+      matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
     }
     return matchSearch && matchTag && matchType && matchSubType && matchPrice;
   });
@@ -233,10 +268,7 @@ function render(){
     card.innerHTML = `
       <img src="${drink.image || ''}" loading="lazy">
       <div class="card-content">
-        <div class="type-info">
-          <span class="type">${drink.type}</span>
-          <span class="sub-type">${drink.sub_type || ''}</span>
-        </div>
+        <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
         <div class="title">${drink.name}</div>
         <div class="price">¥${Number(drink.price).toLocaleString()}</div>
         <div class="description">${drink.description || ''}</div>
@@ -249,8 +281,7 @@ function render(){
 }
 
 function toggleSubTypeInput() {
-  const type = document.getElementById("typeInput").value;
-  document.getElementById("subTypeGroup").style.display = (type === "Whisky") ? "block" : "none";
+  document.getElementById("subTypeGroup").style.display = (document.getElementById("typeInput").value === "Whisky") ? "block" : "none";
 }
 
 document.getElementById("saveBtn").addEventListener("click", async () => {
@@ -296,10 +327,7 @@ function renderTypes(){
 
 function renderSubTypes(){
   const subArea = document.getElementById("subTypeArea");
-  if (selectedType !== "Whisky") {
-    subArea.style.display = "none";
-    return;
-  }
+  if (selectedType !== "Whisky") { subArea.style.display = "none"; return; }
   subArea.style.display = "flex";
   const subs = ["スコッチ", "ジャパニーズ", "アイリッシュ", "アメリカン", "カナディアン", "アイラ", "その他"];
   subArea.innerHTML = `<div class="tag-btn ${selectedSubType===''?'active':''}" onclick="selectedSubType='';render()">産地すべて</div>` + 
