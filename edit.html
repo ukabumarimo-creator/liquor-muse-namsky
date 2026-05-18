@@ -363,6 +363,38 @@ function render(){
   renderTypes(); renderSubTypes(); renderTags();
 }
 
+// 編集を開始する処理（入力フォームにデータをセットする等）
+function startEdit(index, event) {
+  event.stopPropagation(); // カード自体のクリックイベント（詳細モーダル）が発動するのを防ぐ
+  const drink = drinks[index];
+  
+  // 例: 画面内にあるフォームの入力欄に既存のデータを詰め込む
+  // (お使いのフォームのID名に合わせて調整してください)
+  if(document.getElementById("inputName")) {
+    document.getElementById("inputName").value = drink.name;
+    document.getElementById("inputPrice").value = drink.price;
+    // ...以下、他の項目も同様にセットしてフォームへスクロールさせる等
+  }
+  
+  alert(`${drink.name} の編集を開始します（フォームを確認してください）`);
+}
+
+// 削除する処理
+async function deleteDrink(id, event) {
+  event.stopPropagation(); // 詳細モーダルが開くのを防ぐ
+  
+  if (!confirm("本当にこのお酒を削除しますか？")) return;
+
+  const { error } = await _supabase.from('drinks').delete().eq('id', id);
+  
+  if (!error) {
+    alert("削除しました。");
+    fetchDrinks(); // データを再読み込みして画面を更新
+  } else {
+    alert("削除に失敗しました: " + error.message);
+  }
+}
+
 function openDetailModal(index, event) {
   if(event && event.target.tagName === 'BUTTON') return;
 
