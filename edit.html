@@ -88,21 +88,6 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .edit-btn{ background:var(--gold); color:black; }
 .delete-btn{ background:#333; color:#ff6b6b; }
 
-/* おすすめバッジのスタイル */
-.rec-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: linear-gradient(135deg, #d4af37, #aa7c11);
-  color: #000;
-  font-size: 0.6rem;
-  font-weight: bold;
-  padding: 3px 8px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-  letter-spacing: 1px;
-}
-
 @media(min-width: 768px) { 
   .menu-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
   .card img { height: 220px; }
@@ -323,31 +308,22 @@ function render(){
     }
     return matchSearch && matchTag && matchType && matchSubType && matchPrice;
   });
-  // ⭐️ 2. 【追加】おすすめ優先 ＆ 名前順でソートする
-  filtered.sort((a, b) => {
-    if (a.is_featured && !b.is_featured) return -1;
-    if (!a.is_featured && b.is_featured) return 1;
-    return a.name.localeCompare(b.name, 'ja');
-  });
 
- filtered.forEach((drink, index)=>{
-    const card = document.createElement("div");
-    card.className = "card";
-    card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
-   const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
+  filtered.forEach((drink, index)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
     card.innerHTML = `
-      <div style="position: relative;">
-        <img src="${drink.image || ''}" loading="lazy">
-        ${recommendBadge}
-      </div>
-      <div class="card-content">
-        <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
-        <div class="title">${drink.name}</div>
-        <div class="price">¥${Number(drink.price).toLocaleString()}</div>
-      </div>`;
-    menuGrid.appendChild(card);
-  });
-  renderTypes(); renderSubTypes(); renderTags();
+      <img src="${drink.image || ''}" loading="lazy">
+      <div class="card-content">
+        <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
+        <div class="title">${drink.name}</div>
+        <div class="price">¥${Number(drink.price).toLocaleString()}</div>
+        ${adminMode ? `<div class="card-buttons"><button class="edit-btn" onclick="editDrink(${drinks.indexOf(drink)}, event)">編集</button><button class="delete-btn" onclick="deleteDrink(${drinks.indexOf(drink)}, event)">削除</button></div>` : ""}
+      </div>`;
+    menuGrid.appendChild(card);
+  });
+  renderTypes(); renderSubTypes(); renderTags();
 }
 
 function openDetailModal(index, event) {
