@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BAR LIQUOR MUSEUM Namba Skyo</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root{ --gold:#d4af37; --bg:#0b0b0b; --card:#161616; --text:#f5f5f5; --accent:#ff4b2b; }
+
+body{ 
+  font-family:'Noto Serif JP', serif; 
+  background:var(--bg); 
+  color:var(--text); 
+  min-height:100vh; 
+  line-height: 1.6;
+}
+
+.background{
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.92)),
+    url("https://osakeno-museum.com/wp-content/uploads/2024/10/nambaskyo_1180x530.jpg");
+  background-size:cover;
+  background-position:center;
+  z-index:-1;
+}
+
+header{ padding:40px 20px 20px; text-align: center; }
+header h1{ color:var(--gold); letter-spacing:4px; font-size:1.5rem; }
+header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
+
+#logoutBtn{ display:none; position:absolute; top:20px; right:20px; background:rgba(26,26,26,0.8); color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:999px; font-size: 0.8rem; }
+#logoutBtn.show{ display:block; }
+
+.top-area{ 
+  position:sticky; 
+  top:0; 
+  z-index:100; 
+  background:rgba(10,10,10,0.95); 
+  backdrop-filter:blur(15px); 
+  border-bottom:1px solid rgba(212,175,55,0.2);
+  padding-bottom: 10px;
+}
+.search-wrap{ padding:15px 15px 5px; display: flex; flex-direction: column; gap: 8px; }
+.search{ 
+  width:100%; 
+  border:none; 
+  background:#222; 
+  padding:12px 15px; 
+  border-radius:12px; 
+  color:white; 
+  font-size:1rem; 
+  border: 1px solid #333;
+  appearance: none;
+}
+.search:focus{ outline: none; border-color: var(--gold); background: #2a2a2a; }
+
+.tag-area{ display:flex; gap:8px; overflow-x:auto; padding:10px 15px; scrollbar-width: none; }
+.tag-area::-webkit-scrollbar{ display:none; }
+.tag-btn{ flex:none; border:1px solid rgba(212,175,55,0.5); background:rgba(20,20,20,0.6); color:var(--gold); padding:6px 12px; border-radius:999px; font-size:0.8rem; transition: 0.2s; }
+.tag-btn.active{ background:var(--gold); color:black; border-color: var(--gold); font-weight: bold; }
+
+.menu-grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 12px; 
+  padding: 15px 10px 120px; 
+}
+
+.card{ background:rgba(25,25,25,0.85); border-radius:18px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; cursor: pointer; transition: transform 0.2s; }
+.card:active { transform: scale(0.98); }
+.card img{ width:100%; height:140px; object-fit:cover; }
+.card-content{ padding:12px; flex-grow: 1; display: flex; flex-direction: column; }
+
+.type-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.type{ color:var(--gold); font-size:0.65rem; font-weight: bold; }
+.sub-type{ color:#aaa; font-size:0.65rem; }
+.title{ font-size:0.95rem; margin-bottom:4px; font-weight: 700; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.price{ color:var(--gold); margin-top:auto; font-size:0.9rem; font-weight: bold; padding-top: 4px; }
+
+.card-buttons{ display:flex; gap:6px; margin-top:10px; position: relative; z-index: 10; }
+.edit-btn, .delete-btn{ flex:1; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold; font-size: 0.75rem; }
+.edit-btn{ background:var(--gold); color:black; }
+.delete-btn{ background:#333; color:#ff6b6b; }
+
+@media(min-width: 768px) { 
+  .menu-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
+  .card img { height: 220px; }
+}
+
+.fab{ position:fixed; right:20px; bottom:30px; width:64px; height:64px; border-radius:50%; border:none; background:var(--gold); color:black; font-size:1.8rem; cursor:pointer; z-index:200; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+
+.modal{ position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:flex-end; z-index:300; backdrop-filter: blur(10px); }
+.modal.active{ display:flex; }
+.modal-content{ width:100%; background:#1a1a1a; border-radius:30px 30px 0 0; padding:30px 20px 50px; max-height:92vh; overflow-y:auto; }
+.form-group{ margin-bottom:20px; }
+.form-group label { display: block; font-size: 0.85rem; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
+.form-group input, .form-group textarea, .form-group select{ width:100%; background:#252525; border:1px solid #444; padding:15px; border-radius:14px; color:white; font-size:1rem; }
+.save-btn{ width:100%; border:none; background:var(--gold); color:black; padding:18px; border-radius:16px; font-weight:bold; font-size:1.1rem; cursor:pointer; margin-top: 10px; }
+.loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:400; justify-content:center; align-items:center; color:var(--gold); font-weight:bold; }
+
+/* 詳細フロートポップアップ（スクロール機能付きに強化） */
+.detail-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:350; backdrop-filter: blur(8px); padding:20px; }
+.detail-modal.active { display:flex; }
+.detail-content { width:100%; max-width:450px; max-height: 85vh; background:#161616; border:1px solid rgba(212,175,55,0.3); border-radius:24px; overflow:hidden; box-shadow:0 15px 30px rgba(0,0,0,0.5); animation: floatUp 0.3s ease; display: flex; flex-direction: column; }
+@keyframes floatUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.detail-img { width:100%; height:200px; object-fit:cover; flex-shrink: 0; }
+.detail-body { padding:20px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
+.detail-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-shrink: 0; }
+.detail-type { color:var(--gold); font-size:0.8rem; font-weight:bold; }
+.detail-subtype { color:#aaa; font-size:0.8rem; }
+.detail-title { font-size:1.4rem; color:#fff; font-weight:700; margin-bottom:8px; line-height:1.3; flex-shrink: 0; }
+.detail-price { color:var(--gold); font-size:1.2rem; font-weight:bold; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; flex-shrink: 0; }
+
+/* 修正：説明が長い場合にスクロールさせる設定 */
+.detail-desc { color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:18px; white-space: pre-wrap; max-height: 150px; overflow-y: auto; padding-right: 4px; }
+/* スクロールバーのデザインをお店の雰囲気に合わせる */
+.detail-desc::-webkit-scrollbar { width: 4px; }
+.detail-desc::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 999px; }
+
+.detail-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; flex-shrink: 0; }
+.detail-tag-item { background:#2a2a2a; color:var(--gold); padding:4px 10px; border-radius:6px; font-size:0.75rem; border:1px solid rgba(212,175,55,0.1); }
+.detail-close-btn { width:100%; border:none; background:#222; color:#fff; padding:14px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer; border:1px solid #333; margin-top: auto; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">保存中...</div>
+<div class="background"></div>
+<header>
+  <h1>お酒の美術館 なんばスカイオ店</h1>
+  <p>BAR LIQUOR MUSEUM Namba Skyo</p>
+  <button id="logoutBtn">管理者終了</button>
+</header>
+
+<div class="top-area">
+  <div class="search-wrap">
+    <input type="text" class="search" id="searchInput" placeholder="銘柄で検索...">
+    <input type="number" id="priceSearch" class="search" placeholder="価格帯(例:1000)">
+  </div>
+  <div class="tag-area" id="typeArea"></div>
+  <div class="tag-area" id="subTypeArea" style="display:none; padding-top:0;"></div>
+  <div class="tag-area" id="tagArea"></div>
+</div>
+
+<section class="menu-grid" id="menuGrid"></section>
+
+<div class="detail-modal" id="detailModal">
+  <div class="detail-content">
+    <img src="" id="detailImg" class="detail-img">
+    <div class="detail-body">
+      <div class="detail-meta">
+        <span id="detailType" class="detail-type"></span>
+        <span id="detailSubtype" class="detail-subtype"></span>
+      </div>
+      <div id="detailTitle" class="detail-title"></div>
+      <div id="detailPrice" class="detail-price"></div>
+      <div id="detailDesc" class="detail-desc"></div>
+      <div id="detailTags" class="detail-tags"></div>
+      <button class="detail-close-btn" onclick="closeDetailModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="adminBtn">⚙</button>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2 id="modalTitle" style="margin-bottom:25px; color:var(--gold);">Menu Item</h2>
+    <div class="form-group"><label>お酒の名前</label><input type="text" id="nameInput"></div>
+    <div class="form-group"><label>写真 (自動圧縮されます)</label><input type="file" id="imageInput" accept="image/*"><img id="preview" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin-top:15px; display:none;"></div>
+    
+    <div class="form-group"><label>カテゴリー</label>
+      <select id="typeInput" onchange="toggleSubTypeInput()">
+        <option value="Whisky">Whisky</option>
+        <option value="Gin">Gin</option>
+        <option value="Vodka">Vodka</option>
+        <option value="Rum">Rum</option>
+        <option value="Tequila">Tequila</option>
+        <option value="Cocktail">Cocktail</option>
+        <option value="Other Liqueur">Other Liqueur</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="subTypeGroup" style="display:none;">
+      <label>ウイスキー産地</label>
+      <select id="subTypeInput">
+        <option value="">産地未設定</option>
+        <option value="スコッチ">スコッチ</option>
+        <option value="ジャパニーズ">ジャパニーズ</option>
+        <option value="アイリッシュ">アイリッシュ</option>
+        <option value="アメリカン">アメリカン</option>
+        <option value="カナディアン">カナディアン</option>
+        <option value="アイラ">アイラ</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+
+    <div class="form-group"><label>価格 (円)</label><input type="number" id="priceInput"></div>
+    <div class="form-group"><label>タグ (カンマ区切り)</label><input type="text" id="tagsInput" placeholder="スモーキー, 限定品 など"></div>
+    <div class="form-group"><label>説明</label><textarea id="descInput" rows="4"></textarea></div>
+    <button class="save-btn" id="saveBtn">クラウドに保存</button>
+    <button class="save-btn" style="background:#333; color:white; margin-top:10px;" onclick="document.getElementById('modal').classList.remove('active')">キャンセル</button>
+  </div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modal-content" style="padding-bottom:100px;">
+    <h2 style="margin-bottom:20px; color:var(--gold);">Admin Login</h2>
+    <div class="form-group"><input type="password" id="passwordInput" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="4桁のパスワード"></div>
+    <button class="save-btn" id="loginBtn">認証</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sqoyhsruvfcwwtiytykq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxb3loc3J1dmZjd3d0aXl0eWtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MDU5NjUsImV4cCI6MjA5NDM4MTk2NX0.2yCIxs0QboAF6ldGBTh-YI2t9m3rwFyedrc-NkFMXT4';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let drinks = [];
+let selectedTag = ""; let selectedType = ""; let selectedSubType = ""; let currentImageUrl = ""; let editingIndex = null; let adminMode = false;
+const ADMIN_PASSWORD = "0000";
+
+const menuGrid = document.getElementById("menuGrid");
+const searchInput = document.getElementById("searchInput");
+const priceSearch = document.getElementById("priceSearch");
+const modal = document.getElementById("modal");
+const preview = document.getElementById("preview");
+const imageInput = document.getElementById("imageInput");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const detailModal = document.getElementById("detailModal");
+
+const subFolderMap = {
+  "スコッチ": "scotch",
+  "ジャパニーズ": "japanese",
+  "アイリッシュ": "irish",
+  "アメリカン": "american",
+  "カナディアン": "canadian",
+  "アイラ": "islay",
+  "その他": "others"
+};
+
+async function fetchDrinks() {
+  const { data, error } = await _supabase.from('drinks').select('*').order('created_at', { ascending: false });
+  if (!error) { drinks = data; render(); }
+}
+
+async function processImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width; let height = img.height;
+        const max_size = 1200;
+        if (width > max_size) { height *= max_size / width; width = max_size; }
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.7);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImage(file, category, subCategory) {
+  loadingOverlay.style.display = "flex";
+  const compressedBlob = await processImage(file);
+  
+  let folderPath = '';
+  if (category === "Whisky") {
+    const engSubFolder = subCategory ? (subFolderMap[subCategory] || 'unspecified') : 'unspecified';
+    folderPath = `Whisky/${engSubFolder}/`;
+  } else {
+    folderPath = category ? `${category}/` : 'Uncategorized/';
+  }
+  
+  const fileName = `${folderPath}${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
+  const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, compressedBlob);
+  
+  loadingOverlay.style.display = "none";
+  if (error) {
+    alert("画像のアップロードに失敗しました: " + error.message);
+    return null;
+  }
+  const { data: publicData } = _supabase.storage.from('drink-images').getPublicUrl(fileName);
+  return publicData.publicUrl;
+}
+
+function render(){
+  menuGrid.innerHTML = "";
+  const filtered = drinks.filter(drink => {
+    const matchSearch = drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
+    const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
+    const matchType = selectedType === "" || drink.type === selectedType;
+    const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
+    let matchPrice = true;
+    if(priceSearch.value) {
+      matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
+    }
+    return matchSearch && matchTag && matchType && matchSubType && matchPrice;
+  });
+
+  filtered.forEach((drink, index)=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
+    card.innerHTML = `
+      <img src="${drink.image || ''}" loading="lazy">
+      <div class="card-content">
+        <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
+        <div class="title">${drink.name}</div>
+        <div class="price">¥${Number(drink.price).toLocaleString()}</div>
+        ${adminMode ? `<div class="card-buttons"><button class="edit-btn" onclick="editDrink(${drinks.indexOf(drink)}, event)">編集</button><button class="delete-btn" onclick="deleteDrink(${drinks.indexOf(drink)}, event)">削除</button></div>` : ""}
+      </div>`;
+    menuGrid.appendChild(card);
+  });
+  renderTypes(); renderSubTypes(); renderTags();
+}
+
+function openDetailModal(index, event) {
+  if(event && event.target.tagName === 'BUTTON') return;
+
+  const drink = drinks[index];
+  document.getElementById("detailImg").src = drink.image || '';
+  document.getElementById("detailType").textContent = drink.type;
+  document.getElementById("detailSubtype").textContent = drink.sub_type || '';
+  document.getElementById("detailTitle").textContent = drink.name;
+  document.getElementById("detailPrice").textContent = `¥${Number(drink.price).toLocaleString()}`;
+  document.getElementById("detailDesc").textContent = drink.description || '説明はありません。';
+  
+  const tagsContainer = document.getElementById("detailTags");
+  tagsContainer.innerHTML = "";
+  if (drink.tags && drink.tags.length > 0) {
+    drink.tags.forEach(tag => {
+      const span = document.createElement("span");
+      span.className = "detail-tag-item";
+      span.textContent = tag;
+      tagsContainer.appendChild(span);
+    });
+  }
+  
+  detailModal.classList.add("active");
+  // ポップアップを開いた時、スクロール位置を一番上にリセットする
+  document.getElementById("detailDesc").scrollTop = 0;
+}
+
+function closeDetailModal() {
+  detailModal.classList.remove("active");
+}
+
+function toggleSubTypeInput() {
+  document.getElementById("subTypeGroup").style.display = (document.getElementById("typeInput").value === "Whisky") ? "block" : "none";
+}
+
+document.getElementById("saveBtn").addEventListener("click", async () => {
+  const file = imageInput.files[0];
+  const typeValue = document.getElementById("typeInput").value;
+  const subTypeValue = typeValue === "Whisky" ? document.getElementById("subTypeInput").value : null;
+  let finalImageUrl = currentImageUrl;
+  
+  if (file) {
+    const uploadedUrl = await uploadImage(file, typeValue, subTypeValue);
+    if (uploadedUrl) finalImageUrl = uploadedUrl;
+  }
+  
+  const drinkData = {
+    name: document.getElementById("nameInput").value,
+    image: finalImageUrl,
+    type: typeValue,
+    sub_type: subTypeValue,
+    price: Number(document.getElementById("priceInput").value),
+    description: document.getElementById("descInput").value,
+    tags: document.getElementById("tagsInput").value.split(",").map(t=>t.trim()).filter(t=>t!=="")
+  };
+  if (editingIndex === null) await _supabase.from('drinks').insert([drinkData]);
+  else await _supabase.from('drinks').update(drinkData).eq('id', drinks[editingIndex].id);
+  modal.classList.remove("active");
+  fetchDrinks();
+});
+
+async function deleteDrink(i, event){
+  if(event) event.stopPropagation();
+  const targetDrink = drinks[i];
+  if(!confirm(`${targetDrink.name}を削除しますか？`)) return;
+  if (targetDrink.image && targetDrink.image.includes('drink-images')) {
+    const url = new URL(targetDrink.image);
+    const pathSegments = url.pathname.split('/storage/v1/object/public/drink-images/');
+    if(pathSegments.length > 1) {
+      const storagePath = decodeURIComponent(pathSegments[1]);
+      await _supabase.storage.from('drink-images').remove([storagePath]);
+    }
+  }
+  await _supabase.from('drinks').delete().eq('id', targetDrink.id);
+  fetchDrinks();
+}
+
+function renderTypes(){
+  const types = ["Whisky", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur"];
+  document.getElementById("typeArea").innerHTML = `<div class="tag-btn ${selectedType===''?'active':''}" onclick="selectedType='';selectedSubType='';render()">ALL</div>` + 
+    types.map(t => `<div class="tag-btn ${selectedType===t?'active':''}" onclick="selectedType='${t}';selectedSubType='';render()">${t}</div>`).join("");
+}
+
+function renderSubTypes(){
+  const subArea = document.getElementById("subTypeArea");
+  if (selectedType !== "Whisky") { subArea.style.display = "none"; return; }
+  subArea.style.display = "flex";
+  const subs = ["スコッチ", "ジャパニーズ", "アイリッシュ", "アメリカン", "カナディアン", "アイラ", "その他"];
+  subArea.innerHTML = `<div class="tag-btn ${selectedSubType===''?'active':''}" onclick="selectedSubType='';render()">産地すべて</div>` + 
+    subs.map(s => `<div class="tag-btn ${selectedSubType===s?'active':''}" onclick="selectedSubType='${s}';render()">${s}</div>`).join("");
+}
+
+function renderTags(){
+  const tags = [...new Set(drinks.flatMap(d=>d.tags || []))];
+  document.getElementById("tagArea").innerHTML = `<div class="tag-btn ${selectedTag===''?'active':''}" onclick="selectedTag='';render()">すべて</div>` + 
+    tags.map(t => `<div class="tag-btn ${selectedTag===t?'active':''}" onclick="selectedTag='${t}';render()">${t}</div>`).join("");
+}
+
+document.getElementById("adminBtn").addEventListener("click", () => adminMode ? openAddModal() : document.getElementById("adminModal").classList.add("active"));
+document.getElementById("loginBtn").addEventListener("click", () => {
+  if(document.getElementById("passwordInput").value === ADMIN_PASSWORD){
+    adminMode = true; document.getElementById("adminBtn").style.background="#ff4b2b"; document.getElementById("logoutBtn").classList.add("show");
+    document.getElementById("adminModal").classList.remove("active"); render();
+  } else { alert("パスワードが違います"); }
+});
+document.getElementById("logoutBtn").addEventListener("click", () => { adminMode = false; document.getElementById("logoutBtn").classList.remove("show"); document.getElementById("adminBtn").style.background="var(--gold)"; render(); });
+
+function openAddModal(){ editingIndex = null; document.getElementById("modalTitle").textContent = "Add New Drink"; clearForm(); toggleSubTypeInput(); modal.classList.add("active"); }
+
+function editDrink(i, event){
+  if(event) event.stopPropagation();
+  const d = drinks[i]; editingIndex = i; document.getElementById("modalTitle").textContent = "Edit Drink";
+  document.getElementById("nameInput").value = d.name; document.getElementById("typeInput").value = d.type;
+  toggleSubTypeInput();
+  if(d.type === "Whisky") document.getElementById("subTypeInput").value = d.sub_type || "";
+  document.getElementById("priceInput").value = d.price; document.getElementById("descInput").value = d.description;
+  document.getElementById("tagsInput").value = d.tags ? d.tags.join(",") : ""; 
+  currentImageUrl = d.image; preview.src = d.image; preview.style.display = "block"; modal.classList.add("active");
+}
+
+imageInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = "block"; };
+    reader.readAsDataURL(file);
+  }
+});
+
+function clearForm(){ 
+  document.getElementById("nameInput").value=""; document.getElementById("priceInput").value=""; 
+  document.getElementById("descInput").value=""; document.getElementById("tagsInput").value=""; 
+  document.getElementById("subTypeInput").value="";
+  imageInput.value = ""; preview.style.display="none"; currentImageUrl=""; 
+}
+searchInput.addEventListener("input", render); priceSearch.addEventListener("input", render);
+
+window.onclick = (e) => { 
+  if(e.target === modal) modal.classList.remove("active"); 
+  if(e.target === document.getElementById("adminModal")) document.getElementById("adminModal").classList.remove("active"); 
+  if(e.target === detailModal) closeDetailModal(); 
+};
+
+fetchDrinks();
+</script>
+</body>
+</html>
