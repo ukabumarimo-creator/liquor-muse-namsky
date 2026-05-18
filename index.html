@@ -196,6 +196,17 @@ const preview = document.getElementById("preview");
 const imageInput = document.getElementById("imageInput");
 const loadingOverlay = document.getElementById("loadingOverlay");
 
+// 日本語の産地を安全な半角英語のフォルダ名に変換するマップ
+const subFolderMap = {
+  "スコッチ": "scotch",
+  "ジャパニーズ": "japanese",
+  "アイリッシュ": "irish",
+  "アメリカン": "american",
+  "カナディアン": "canadian",
+  "アイラ": "islay",
+  "その他": "others"
+};
+
 async function fetchDrinks() {
   const { data, error } = await _supabase.from('drinks').select('*').order('created_at', { ascending: false });
   if (!error) { drinks = data; render(); }
@@ -222,18 +233,17 @@ async function processImage(file) {
   });
 }
 
-// 修正：カテゴリー ＞ サブカテゴリー（産地）の2階層フォルダ分けロジック
+// 修正：フォルダ名を半角英数にして安全にアップロードするロジック
 async function uploadImage(file, category, subCategory) {
   loadingOverlay.style.display = "flex";
   const compressedBlob = await processImage(file);
   
   let folderPath = '';
   if (category === "Whisky") {
-    // ウイスキーかつ産地が選ばれていたら「Whisky/スコッチ/」のように階層化
-    const subFolder = subCategory ? subCategory : '未設定';
-    folderPath = `Whisky/${subFolder}/`;
+    // 産地が日本語の場合、安全な英語表記（scotch等）に変換してフォルダ作成
+    const engSubFolder = subCategory ? (subFolderMap[subCategory] || 'unspecified') : 'unspecified';
+    folderPath = `Whisky/${engSubFolder}/`;
   } else {
-    // ウイスキー以外は「Gin/」のように1階層
     folderPath = category ? `${category}/` : 'Uncategorized/';
   }
   
@@ -241,7 +251,10 @@ async function uploadImage(file, category, subCategory) {
   const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, compressedBlob);
   
   loadingOverlay.style.display = "none";
-  if (error) return null;
+  if (error) {
+    alert("画像のアップロードに失敗しました: " + error.message);
+    return null;
+  }
   const { data: publicData } = _supabase.storage.from('drink-images').getPublicUrl(fileName);
   return publicData.publicUrl;
 }
@@ -289,7 +302,6 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   let finalImageUrl = currentImageUrl;
   
   if (file) {
-    // 修正：フォルダ仕分け用に「カテゴリー」と「産地」の両方を送る
     const uploadedUrl = await uploadImage(file, typeValue, subTypeValue);
     if (uploadedUrl) finalImageUrl = uploadedUrl;
   }
@@ -309,7 +321,6 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   fetchDrinks();
 });
 
-// 修正：2階層以上の深いフォルダからでも確実に画像を削除できるロジック
 async function deleteDrink(i){
   const targetDrink = drinks[i];
   if(!confirm(`${targetDrink.name}を削除しますか？`)) return;
