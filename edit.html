@@ -100,6 +100,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
   letter-spacing: 1px;
+  z-index: 5;
 }
 
 @media(min-width: 768px) { 
@@ -311,8 +312,6 @@ async function uploadImage(file, category, subCategory) {
 
 function render(){
   menuGrid.innerHTML = "";
-  
-  // 1. まず検索やタグで絞り込む（既存の処理）
   const filtered = drinks.filter(drink => {
     const matchSearch = drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
     const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
@@ -325,24 +324,15 @@ function render(){
     return matchSearch && matchTag && matchType && matchSubType && matchPrice;
   });
 
-  // ⭐️ 2. 【追加】おすすめ優先 ＆ 名前順でソートする
-  filtered.sort((a, b) => {
-    // まず「おすすめフラグ(is_featured)」で比較
-    // true（おすすめ）を前に、falseを後ろにする
-    if (a.is_featured && !b.is_featured) return -1;
-    if (!a.is_featured && b.is_featured) return 1;
-    
-    // おすすめ度合いが同じ（両方true、または両方false）なら、名前順(A-Z / あいうえお順)で比較
-    return a.name.localeCompare(b.name, 'ja');
-  });
+  // ⭐️【追加】おすすめ優先 ＆ 名前順（A-Z・あいうえお順）でソート
+  filtered.sort((a, b) => (b.is_featured || 0) - (a.is_featured || 0) || a.name.localeCompare(b.name, 'ja'));
 
-  // 3. 画面にカードを描画する（既存の処理に「おすすめバッジ」を少し追加）
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
     card.className = "card";
     card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
     
-    // おすすめの場合だけ「RECOMMEND」という文字（バッジ）を表示する仕組み
+    // ⭐️【追加】おすすめ商品の場合だけバッジを表示する
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
 
     card.innerHTML = `
@@ -354,6 +344,7 @@ function render(){
         <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
         <div class="title">${drink.name}</div>
         <div class="price">¥${Number(drink.price).toLocaleString()}</div>
+        ${adminMode ? `<div class="card-buttons"><button class="edit-btn" onclick="editDrink(${drinks.indexOf(drink)}, event)">編集</button><button class="delete-btn" onclick="deleteDrink(${drinks.indexOf(drink)}, event)">削除</button></div>` : ""}
       </div>`;
     menuGrid.appendChild(card);
   });
