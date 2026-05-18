@@ -222,15 +222,22 @@ async function processImage(file) {
   });
 }
 
-// 修正：フォルダ分けアップロードロジック
-async function uploadImage(file, category) {
+// 修正：カテゴリー ＞ サブカテゴリー（産地）の2階層フォルダ分けロジック
+async function uploadImage(file, category, subCategory) {
   loadingOverlay.style.display = "flex";
   const compressedBlob = await processImage(file);
   
-  // ファイル名の前に「カテゴリー名/」を入れることで自動でフォルダが作られます
-  const folder = category ? `${category}/` : 'Uncategorized/';
-  const fileName = `${folder}${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
+  let folderPath = '';
+  if (category === "Whisky") {
+    // ウイスキーかつ産地が選ばれていたら「Whisky/スコッチ/」のように階層化
+    const subFolder = subCategory ? subCategory : '未設定';
+    folderPath = `Whisky/${subFolder}/`;
+  } else {
+    // ウイスキー以外は「Gin/」のように1階層
+    folderPath = category ? `${category}/` : 'Uncategorized/';
+  }
   
+  const fileName = `${folderPath}${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
   const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, compressedBlob);
   
   loadingOverlay.style.display = "none";
@@ -278,11 +285,12 @@ function toggleSubTypeInput() {
 document.getElementById("saveBtn").addEventListener("click", async () => {
   const file = imageInput.files[0];
   const typeValue = document.getElementById("typeInput").value;
+  const subTypeValue = typeValue === "Whisky" ? document.getElementById("subTypeInput").value : null;
   let finalImageUrl = currentImageUrl;
   
   if (file) {
-    // フォルダ分けのために選択されたカテゴリーを渡す
-    const uploadedUrl = await uploadImage(file, typeValue);
+    // 修正：フォルダ仕分け用に「カテゴリー」と「産地」の両方を送る
+    const uploadedUrl = await uploadImage(file, typeValue, subTypeValue);
     if (uploadedUrl) finalImageUrl = uploadedUrl;
   }
   
@@ -290,7 +298,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     name: document.getElementById("nameInput").value,
     image: finalImageUrl,
     type: typeValue,
-    sub_type: typeValue === "Whisky" ? document.getElementById("subTypeInput").value : null,
+    sub_type: subTypeValue,
     price: Number(document.getElementById("priceInput").value),
     description: document.getElementById("descInput").value,
     tags: document.getElementById("tagsInput").value.split(",").map(t=>t.trim()).filter(t=>t!=="")
@@ -301,13 +309,12 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   fetchDrinks();
 });
 
-// 修正：フォルダ階層の画像も確実に消せる削除ロジック
+// 修正：2階層以上の深いフォルダからでも確実に画像を削除できるロジック
 async function deleteDrink(i){
   const targetDrink = drinks[i];
   if(!confirm(`${targetDrink.name}を削除しますか？`)) return;
   if (targetDrink.image && targetDrink.image.includes('drink-images')) {
     const url = new URL(targetDrink.image);
-    // フォルダ名を含んだ全体のパス（例: Whisky/xxxx.webp）を抽出して削除コマンドに送る
     const pathSegments = url.pathname.split('/storage/v1/object/public/drink-images/');
     if(pathSegments.length > 1) {
       const storagePath = decodeURIComponent(pathSegments[1]);
