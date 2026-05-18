@@ -79,6 +79,20 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .sub-type{ color:#aaa; font-size:0.65rem; }
 .title{ font-size:0.95rem; margin-bottom:4px; font-weight: 700; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .price{ color:var(--gold); margin-top:auto; font-size:0.9rem; font-weight: bold; padding-top: 4px; }
+/* おすすめバッジのスタイル */
+.rec-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #d4af37, #aa7c11);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+}
 
 @media(min-width: 768px) { 
   .menu-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
@@ -164,6 +178,8 @@ async function fetchDrinks() {
 
 function render(){
   menuGrid.innerHTML = "";
+  
+  // 1. まず検索やタグで絞り込む（既存の処理）
   const filtered = drinks.filter(drink => {
     const matchSearch = drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
     const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
@@ -176,12 +192,31 @@ function render(){
     return matchSearch && matchTag && matchType && matchSubType && matchPrice;
   });
 
+  // ⭐️ 2. 【追加】おすすめ優先 ＆ 名前順でソートする
+  filtered.sort((a, b) => {
+    // まず「おすすめフラグ(is_featured)」で比較
+    // true（おすすめ）を前に、falseを後ろにする
+    if (a.is_featured && !b.is_featured) return -1;
+    if (!a.is_featured && b.is_featured) return 1;
+    
+    // おすすめ度合いが同じ（両方true、または両方false）なら、名前順(A-Z / あいうえお順)で比較
+    return a.name.localeCompare(b.name, 'ja');
+  });
+
+  // 3. 画面にカードを描画する（既存の処理に「おすすめバッジ」を少し追加）
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
     card.className = "card";
     card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
+    
+    // おすすめの場合だけ「RECOMMEND」という文字（バッジ）を表示する仕組み
+    const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
+
     card.innerHTML = `
-      <img src="${drink.image || ''}" loading="lazy">
+      <div style="position: relative;">
+        <img src="${drink.image || ''}" loading="lazy">
+        ${recommendBadge}
+      </div>
       <div class="card-content">
         <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
         <div class="title">${drink.name}</div>
