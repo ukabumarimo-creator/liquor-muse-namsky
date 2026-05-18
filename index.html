@@ -201,7 +201,6 @@ async function fetchDrinks() {
   if (!error) { drinks = data; render(); }
 }
 
-/* --- 画像リサイズ＆圧縮ロジック --- */
 async function processImage(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -209,24 +208,13 @@ async function processImage(file) {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const max_size = 1200; // 最大横幅を1200pxに制限
-
-        if (width > max_size) {
-          height *= max_size / width;
-          width = max_size;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
+        let width = img.width; let height = img.height;
+        const max_size = 1200;
+        if (width > max_size) { height *= max_size / width; width = max_size; }
+        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-
-        // WebP形式、画質0.7で書き出し
-        canvas.toBlob((blob) => {
-          resolve(blob);
-        }, 'image/webp', 0.7);
+        canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.7);
       };
       img.src = e.target.result;
     };
@@ -234,12 +222,15 @@ async function processImage(file) {
   });
 }
 
-async function uploadImage(file) {
+// 修正：フォルダ分けアップロードロジック
+async function uploadImage(file, category) {
   loadingOverlay.style.display = "flex";
-  // 圧縮処理を実行
   const compressedBlob = await processImage(file);
   
-  const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
+  // ファイル名の前に「カテゴリー名/」を入れることで自動でフォルダが作られます
+  const folder = category ? `${category}/` : 'Uncategorized/';
+  const fileName = `${folder}${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
+  
   const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, compressedBlob);
   
   loadingOverlay.style.display = "none";
@@ -286,12 +277,15 @@ function toggleSubTypeInput() {
 
 document.getElementById("saveBtn").addEventListener("click", async () => {
   const file = imageInput.files[0];
+  const typeValue = document.getElementById("typeInput").value;
   let finalImageUrl = currentImageUrl;
+  
   if (file) {
-    const uploadedUrl = await uploadImage(file);
+    // フォルダ分けのために選択されたカテゴリーを渡す
+    const uploadedUrl = await uploadImage(file, typeValue);
     if (uploadedUrl) finalImageUrl = uploadedUrl;
   }
-  const typeValue = document.getElementById("typeInput").value;
+  
   const drinkData = {
     name: document.getElementById("nameInput").value,
     image: finalImageUrl,
@@ -307,13 +301,18 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   fetchDrinks();
 });
 
+// 修正：フォルダ階層の画像も確実に消せる削除ロジック
 async function deleteDrink(i){
   const targetDrink = drinks[i];
   if(!confirm(`${targetDrink.name}を削除しますか？`)) return;
   if (targetDrink.image && targetDrink.image.includes('drink-images')) {
     const url = new URL(targetDrink.image);
-    const fileName = url.pathname.split('/').pop();
-    await _supabase.storage.from('drink-images').remove([fileName]);
+    // フォルダ名を含んだ全体のパス（例: Whisky/xxxx.webp）を抽出して削除コマンドに送る
+    const pathSegments = url.pathname.split('/storage/v1/object/public/drink-images/');
+    if(pathSegments.length > 1) {
+      const storagePath = decodeURIComponent(pathSegments[1]);
+      await _supabase.storage.from('drink-images').remove([storagePath]);
+    }
   }
   await _supabase.from('drinks').delete().eq('id', targetDrink.id);
   fetchDrinks();
