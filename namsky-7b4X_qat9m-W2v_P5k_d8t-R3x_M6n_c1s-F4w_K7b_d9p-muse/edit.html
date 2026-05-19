@@ -224,6 +224,10 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
       <input type="checkbox" id="featuredInput" style="width: 24px; height: 24px; accent-color: var(--gold); cursor: pointer;">
       <label for="featuredInput" style="margin-bottom: 0; cursor: pointer; color: var(--gold); font-weight: bold;">★ おすすめ商品（一覧の上部に優先表示）</label>
     </div>
+    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin: 20px 0;">
+      <input type="checkbox" id="hiddenInput" style="width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer;">
+      <label for="hiddenInput" style="margin-bottom: 0; cursor: pointer; color: var(--accent); font-weight: bold;">🔒 非表示メニュー（隠しワード入力時のみ客側に表示）</label>
+    </div>
     <button class="save-btn" id="saveBtn">クラウドに保存</button>
     <button class="save-btn" style="background:#333; color:white; margin-top:10px;" onclick="document.getElementById('modal').classList.remove('active')">キャンセル</button>
   </div>
@@ -317,8 +321,12 @@ async function uploadImage(file, category, subCategory) {
 
 function render(){
   menuGrid.innerHTML = "";
+  const isSecretUnlocked = adminMode || (searchInput.value.toLowerCase() === "secret");
   const filtered = drinks.filter(drink => {
-    const matchSearch = drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
+    if (drink.is_hidden && !isSecretUnlocked) {
+      return false;
+    }
+    const matchSearch = (searchInput.value.toLowerCase() === "secret") ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
     const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
     const matchType = selectedType === "" || drink.type === selectedType;
     const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
@@ -335,20 +343,21 @@ function render(){
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
     card.className = "card";
-    card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
+    card.setAttribute("onclick", `openDetailModal_new(${JSON.stringify(drink).replace(/"/g, '&quot;')})`);
     
     // ⭐️【追加】おすすめ商品の場合だけバッジを表示する
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
-
+    const displayPrice = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
+    
     card.innerHTML = `
       <div style="position: relative;">
         <img src="${drink.image || ''}" loading="lazy">
         ${recommendBadge}
       </div>
       <div class="card-content">
-        <div class="type-info"><span class="type">${drink.type}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
+        <div class="type-info"><span class="type">${drink.type} ${drink.is_hidden ? '🔒' : ''}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
         <div class="title">${drink.name}</div>
-        <div class="price">¥${Number(drink.price).toLocaleString()}</div>
+        <div class="price">${displayPrice}</div>
         ${adminMode ? `<div class="card-buttons"><button class="edit-btn" onclick="editDrink(${drinks.indexOf(drink)}, event)">編集</button><button class="delete-btn" onclick="deleteDrink(${drinks.indexOf(drink)}, event)">削除</button></div>` : ""}
       </div>`;
     menuGrid.appendChild(card);
@@ -356,6 +365,30 @@ function render(){
   renderTypes(); renderSubTypes(); renderTags();
 }
 
+function openDetailModal_new(drink) {
+  document.getElementById("detailImg").src = drink.image || '';
+  document.getElementById("detailType").textContent = drink.type;
+  document.getElementById("detailSubtype").textContent = drink.sub_type || '';
+  document.getElementById("detailTitle").textContent = drink.name;
+  
+  document.getElementById("detailPrice").textContent = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
+  document.getElementById("detailDesc").textContent = drink.description || '説明はありません。';
+  
+  const tagsContainer = document.getElementById("detailTags");
+  tagsContainer.innerHTML = "";
+  if (drink.tags && drink.tags.length > 0) {
+    drink.tags.forEach(tag => {
+      const span = document.createElement("span");
+      span.className = "detail-tag-item";
+      span.textContent = tag;
+      tagsContainer.appendChild(span);
+    });
+  }
+  
+  detailModal.classList.add("active");
+  document.getElementById("detailDesc").scrollTop = 0;
+}
+  
 function openDetailModal(index, event) {
   if(event && event.target.tagName === 'BUTTON') return;
 
@@ -411,6 +444,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     description: document.getElementById("descInput").value,
     tags: document.getElementById("tagsInput").value.split(",").map(t=>t.trim()).filter(t=>t!==""),
     is_featured: document.getElementById("featuredInput").checked // ⭐️【追加】チェックされているか(true/false)を保存
+    is_hidden: document.getElementById("hiddenInput").checked
   };
   if (editingIndex === null) await _supabase.from('drinks').insert([drinkData]);
   else await _supabase.from('drinks').update(drinkData).eq('id', drinks[editingIndex].id);
@@ -475,6 +509,7 @@ function editDrink(i, event){
   document.getElementById("priceInput").value = d.price; document.getElementById("descInput").value = d.description;
   document.getElementById("tagsInput").value = d.tags ? d.tags.join(",") : ""; 
   document.getElementById("featuredInput").checked = d.is_featured || false; // ⭐️【追加】保存されている状態をチェック箱に反映
+  document.getElementById("hiddenInput").checked = d.is_hidden || false;
   currentImageUrl = d.image; preview.src = d.image; preview.style.display = "block"; modal.classList.add("active");
 }
 
@@ -492,6 +527,7 @@ function clearForm(){
   document.getElementById("descInput").value=""; document.getElementById("tagsInput").value=""; 
   document.getElementById("subTypeInput").value="";
   document.getElementById("featuredInput").checked = false; // ⭐️【追加】新規追加時はチェックを外す
+  document.getElementById("hiddenInput").checked = false;
   imageInput.value = ""; preview.style.display="none"; currentImageUrl=""; 
 }
 searchInput.addEventListener("input", render); priceSearch.addEventListener("input", render);
