@@ -79,7 +79,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .sub-type{ color:#aaa; font-size:0.65rem; }
 .title{ font-size:0.95rem; margin-bottom:4px; font-weight: 700; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .price{ color:var(--gold); margin-top:auto; font-size:0.9rem; font-weight: bold; padding-top: 4px; }
-/* おすすめバッジのスタイル */
+
 .rec-badge {
   position: absolute;
   top: 10px;
@@ -92,6 +92,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.5);
   letter-spacing: 1px;
+  z-index: 5;
 }
 
 @media(min-width: 768px) { 
@@ -164,95 +165,31 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let drinks = [];
-let selectedTag = ""; let selectedType = ""; let selectedSubType = ""; let currentImageUrl = ""; let editingIndex = null; let adminMode = false;
-const ADMIN_PASSWORD = "0000";
+let selectedTag = ""; let selectedType = ""; let selectedSubType = "";
 
 const menuGrid = document.getElementById("menuGrid");
 const searchInput = document.getElementById("searchInput");
 const priceSearch = document.getElementById("priceSearch");
-const modal = document.getElementById("modal");
-const preview = document.getElementById("preview");
-const imageInput = document.getElementById("imageInput");
-const loadingOverlay = document.getElementById("loadingOverlay");
 const detailModal = document.getElementById("detailModal");
-
-const subFolderMap = {
-  "スコッチ": "scotch",
-  "ジャパニーズ": "japanese",
-  "アイリッシュ": "irish",
-  "アメリカン": "american",
-  "カナディアン": "canadian",
-  "アイラ": "islay",
-  "その他": "others"
-};
 
 async function fetchDrinks() {
   const { data, error } = await _supabase.from('drinks').select('*').order('created_at', { ascending: false });
   if (!error) { drinks = data; render(); }
 }
 
-async function processImage(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width; let height = img.height;
-        const max_size = 1200;
-        if (width > max_size) { height *= max_size / width; width = max_size; }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => { resolve(blob); }, 'image/webp', 0.7);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadImage(file, category, subCategory) {
-  loadingOverlay.style.display = "flex";
-  const compressedBlob = await processImage(file);
-  
-  let folderPath = '';
-  if (category === "Whisky") {
-    const engSubFolder = subCategory ? (subFolderMap[subCategory] || 'unspecified') : 'unspecified';
-    folderPath = `Whisky/${engSubFolder}/`;
-  } else {
-    folderPath = category ? `${category}/` : 'Uncategorized/';
-  }
-  
-  const fileName = `${folderPath}${Math.random().toString(36).slice(2)}_${Date.now()}.webp`;
-  const { data, error } = await _supabase.storage.from('drink-images').upload(fileName, compressedBlob);
-  
-  loadingOverlay.style.display = "none";
-  if (error) {
-    alert("画像のアップロードに失敗しました: " + error.message);
-    return null;
-  }
-  const { data: publicData } = _supabase.storage.from('drink-images').getPublicUrl(fileName);
-  return publicData.publicUrl;
-}
-
-// 💡お客さん側で「secret」と入れた時に隠しメニューだけにするロジックを実装
 function render(){
   menuGrid.innerHTML = "";
   const isSecretInput = searchInput.value.toLowerCase() === "もっと美術館";
 
   const filtered = drinks.filter(drink => {
-    // 1. 検索窓が「secret」のとき ➔ 隠しメニュー以外（通常メニュー）はすべて非表示
+    // 1. 検索窓が「もっと美術館」のとき ➔ 隠しメニュー以外はすべて非表示
     if (isSecretInput && !drink.is_hidden) {
       return false;
     }
-    
-    // 2. 通常時（secret以外） ➔ 管理者モードでないなら、隠しメニューは非表示
-    if (!isSecretInput && drink.is_hidden && !adminMode) {
+    // 通常時 ➔ お客さん用画面なので隠しメニューは一律非表示
+    if (!isSecretInput && drink.is_hidden) {
       return false;
     }
-
-    // 3. 検索文字の一致判定（secret入力時は名前のあいまい検索をパスする）
     const matchSearch = isSecretInput ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
     
     const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
@@ -265,29 +202,30 @@ function render(){
     return matchSearch && matchTag && matchType && matchSubType && matchPrice;
   });
 
+  // おすすめ優先 ＆ 名前順（A-Z・あいうえお順）でソート
   filtered.sort((a, b) => (b.is_featured || 0) - (a.is_featured || 0) || a.name.localeCompare(b.name, 'ja'));
 
-  filtered.forEach((drink, index)=>{
+  filtered.forEach((drink)=>{
     const card = document.createElement("div");
     card.className = "card";
+    
+    // 安全に詳細ポップアップを開くイベント
     card.addEventListener("click", () => {
       openDetailModal_new(drink);
     });
     
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
     const displayPrice = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
-    const imageUrl = drink.image || 'https://placehold.co/600x400?text=No+Image';
     
     card.innerHTML = `
       <div style="position: relative;">
-        <img src="${imageUrl}" loading="lazy">
+        <img src="${drink.image || ''}" loading="lazy">
         ${recommendBadge}
       </div>
       <div class="card-content">
         <div class="type-info"><span class="type">${drink.type} ${drink.is_hidden ? '🔒' : ''}</span><span class="sub-type">${drink.sub_type || ''}</span></div>
         <div class="title">${drink.name}</div>
         <div class="price">${displayPrice}</div>
-        ${adminMode ? `<div class="card-buttons"><button class="edit-btn" onclick="editDrink(${drinks.indexOf(drink)}, event)">編集</button><button class="delete-btn" onclick="deleteDrink(${drinks.indexOf(drink)}, event)">削除</button></div>` : ""}
       </div>`;
     menuGrid.appendChild(card);
   });
@@ -295,8 +233,7 @@ function render(){
 }
 
 function openDetailModal_new(drink) {
-  const imageUrl = drink.image || 'https://placehold.co/600x400?text=No+Image';
-  document.getElementById("detailImg").src = imageUrl;
+  document.getElementById("detailImg").src = drink.image || '';
   document.getElementById("detailType").textContent = drink.type;
   document.getElementById("detailSubtype").textContent = drink.sub_type || '';
   document.getElementById("detailTitle").textContent = drink.name;
@@ -318,84 +255,9 @@ function openDetailModal_new(drink) {
   detailModal.classList.add("active");
   document.getElementById("detailDesc").scrollTop = 0;
 }
-  
-function openDetailModal(index, event) {
-  if(event && event.target.tagName === 'BUTTON') return;
-
-  const drink = drinks[index];
-  const imageUrl = drink.image || 'https://placehold.co/600x400?text=No+Image';
-  document.getElementById("detailImg").src = imageUrl;
-  document.getElementById("detailType").textContent = drink.type;
-  document.getElementById("detailSubtype").textContent = drink.sub_type || '';
-  document.getElementById("detailTitle").textContent = drink.name;
-  document.getElementById("detailPrice").textContent = `¥${Number(drink.price).toLocaleString()}`;
-  document.getElementById("detailDesc").textContent = drink.description || '説明はありません。';
-  
-  const tagsContainer = document.getElementById("detailTags");
-  tagsContainer.innerHTML = "";
-  if (drink.tags && drink.tags.length > 0) {
-    drink.tags.forEach(tag => {
-      const span = document.createElement("span");
-      span.className = "detail-tag-item";
-      span.textContent = tag;
-      tagsContainer.appendChild(span);
-    });
-  }
-  
-  detailModal.classList.add("active");
-  document.getElementById("detailDesc").scrollTop = 0;
-}
 
 function closeDetailModal() {
   detailModal.classList.remove("active");
-}
-
-function toggleSubTypeInput() {
-  document.getElementById("subTypeGroup").style.display = (document.getElementById("typeInput").value === "Whisky") ? "block" : "none";
-}
-
-document.getElementById("saveBtn").addEventListener("click", async () => {
-  const file = imageInput.files[0];
-  const typeValue = document.getElementById("typeInput").value;
-  const subTypeValue = typeValue === "Whisky" ? document.getElementById("subTypeInput").value : null;
-  let finalImageUrl = currentImageUrl;
-  
-  if (file) {
-    const uploadedUrl = await uploadImage(file, typeValue, subTypeValue);
-    if (uploadedUrl) finalImageUrl = uploadedUrl;
-  }
-  
-  const drinkData = {
-    name: document.getElementById("nameInput").value,
-    image: finalImageUrl,
-    type: typeValue,
-    sub_type: subTypeValue,
-    price: Number(document.getElementById("priceInput").value),
-    description: document.getElementById("descInput").value,
-    tags: document.getElementById("tagsInput").value.split(",").map(t=>t.trim()).filter(t=>t!==""),
-    is_featured: document.getElementById("featuredInput").checked,
-    is_hidden: document.getElementById("hiddenInput").checked
-  };
-  if (editingIndex === null) await _supabase.from('drinks').insert([drinkData]);
-  else await _supabase.from('drinks').update(drinkData).eq('id', drinks[editingIndex].id);
-  modal.classList.remove("active");
-  fetchDrinks();
-});
-
-async function deleteDrink(i, event){
-  if(event) event.stopPropagation();
-  const targetDrink = drinks[i];
-  if(!confirm(`${targetDrink.name}を削除しますか？`)) return;
-  if (targetDrink.image && targetDrink.image.includes('drink-images')) {
-    const url = new URL(targetDrink.image);
-    const pathSegments = url.pathname.split('/storage/v1/object/public/drink-images/');
-    if(pathSegments.length > 1) {
-      const storagePath = decodeURIComponent(pathSegments[1]);
-      await _supabase.storage.from('drink-images').remove([storagePath]);
-    }
-  }
-  await _supabase.from('drinks').delete().eq('id', targetDrink.id);
-  fetchDrinks();
 }
 
 function renderTypes(){
@@ -419,52 +281,10 @@ function renderTags(){
     tags.map(t => `<div class="tag-btn ${selectedTag===t?'active':''}" onclick="selectedTag='${t}';render()">${t}</div>`).join("");
 }
 
-document.getElementById("adminBtn").addEventListener("click", () => adminMode ? openAddModal() : document.getElementById("adminModal").classList.add("active"));
-document.getElementById("loginBtn").addEventListener("click", () => {
-  if(document.getElementById("passwordInput").value === ADMIN_PASSWORD){
-    adminMode = true; document.getElementById("adminBtn").style.background="#ff4b2b"; document.getElementById("logoutBtn").classList.add("show");
-    document.getElementById("adminModal").classList.remove("active"); render();
-  } else { alert("パスワードが違います"); }
-});
-document.getElementById("logoutBtn").addEventListener("click", () => { adminMode = false; document.getElementById("logoutBtn").classList.remove("show"); document.getElementById("adminBtn").style.background="var(--gold)"; render(); });
-
-function openAddModal(){ editingIndex = null; document.getElementById("modalTitle").textContent = "Add New Drink"; clearForm(); toggleSubTypeInput(); modal.classList.add("active"); }
-
-function editDrink(i, event){
-  if(event) event.stopPropagation();
-  const d = drinks[i]; editingIndex = i; document.getElementById("modalTitle").textContent = "Edit Drink";
-  document.getElementById("nameInput").value = d.name; document.getElementById("typeInput").value = d.type;
-  toggleSubTypeInput();
-  if(d.type === "Whisky") document.getElementById("subTypeInput").value = d.sub_type || "";
-  document.getElementById("priceInput").value = d.price; document.getElementById("descInput").value = d.description;
-  document.getElementById("tagsInput").value = d.tags ? d.tags.join(",") : ""; 
-  document.getElementById("featuredInput").checked = d.is_featured || false;
-  document.getElementById("hiddenInput").checked = d.is_hidden || false;
-  currentImageUrl = d.image || ""; preview.src = d.image || ""; if(d.image){ preview.style.display = "block"; } else { preview.style.display = "none"; } modal.classList.add("active");
-}
-
-imageInput.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = "block"; };
-    reader.readAsDataURL(file);
-  }
-});
-
-function clearForm(){ 
-  document.getElementById("nameInput").value=""; document.getElementById("priceInput").value=""; 
-  document.getElementById("descInput").value=""; document.getElementById("tagsInput").value=""; 
-  document.getElementById("subTypeInput").value="";
-  document.getElementById("featuredInput").checked = false;
-  document.getElementById("hiddenInput").checked = false;
-  imageInput.value = ""; preview.style.display="none"; currentImageUrl=""; 
-}
-searchInput.addEventListener("input", render); priceSearch.addEventListener("input", render);
+searchInput.addEventListener("input", render); 
+priceSearch.addEventListener("input", render);
 
 window.onclick = (e) => { 
-  if(e.target === modal) modal.classList.remove("active"); 
-  if(e.target === document.getElementById("adminModal")) document.getElementById("adminModal").classList.remove("active"); 
   if(e.target === detailModal) closeDetailModal(); 
 };
 
