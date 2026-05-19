@@ -270,7 +270,9 @@ function render(){
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
     card.className = "card";
-    card.setAttribute("onclick", `openDetailModal_new(${JSON.stringify(drink).replace(/"/g, '&quot;')})`);
+    card.addEventListener("click", () => {
+      openDetailModal_new(drink);
+    });
     
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
     const displayPrice = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
