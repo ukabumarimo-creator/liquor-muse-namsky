@@ -443,7 +443,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     price: Number(document.getElementById("priceInput").value),
     description: document.getElementById("descInput").value,
     tags: document.getElementById("tagsInput").value.split(",").map(t=>t.trim()).filter(t=>t!==""),
-    is_featured: document.getElementById("featuredInput").checked // ⭐️【追加】チェックされているか(true/false)を保存
+    is_featured: document.getElementById("featuredInput").checked, // ⭐️【追加】チェックされているか(true/false)を保存
     is_hidden: document.getElementById("hiddenInput").checked
   };
   if (editingIndex === null) await _supabase.from('drinks').insert([drinkData]);
