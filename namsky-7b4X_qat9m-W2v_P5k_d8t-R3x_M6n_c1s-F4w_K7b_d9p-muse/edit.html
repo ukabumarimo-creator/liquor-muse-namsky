@@ -321,21 +321,27 @@ async function uploadImage(file, category, subCategory) {
 
 function render(){
   menuGrid.innerHTML = "";
-  const isSecretUnlocked = adminMode || (searchInput.value.toLowerCase() === "secret");
-  const filtered = drinks.filter(drink => {
-    if (drink.is_hidden && !isSecretUnlocked) {
-      return false;
-    }
-    const matchSearch = (searchInput.value.toLowerCase() === "secret") ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
-    const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
-    const matchType = selectedType === "" || drink.type === selectedType;
-    const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
-    let matchPrice = true;
-    if(priceSearch.value) {
-      matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
-    }
-    return matchSearch && matchTag && matchType && matchSubType && matchPrice;
-  });
+  const isSecretInput = searchInput.value.toLowerCase() === "secret";
+
+const filtered = drinks.filter(drink => {
+  // 1. 検索窓が「secret」のとき ➔ 隠しメニュー以外はすべて非表示
+  if (isSecretInput && !drink.is_hidden) {
+    return false;
+  }
+  if (!isSecretInput && drink.is_hidden && !adminMode) {
+    return false;
+  }
+  const matchSearch = isSecretInput ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
+  
+  const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
+  const matchType = selectedType === "" || drink.type === selectedType;
+  const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
+  let matchPrice = true;
+  if(priceSearch.value) {
+    matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
+  }
+  return matchSearch && matchTag && matchType && matchSubType && matchPrice;
+});
 
   // ⭐️【追加】おすすめ優先 ＆ 名前順（A-Z・あいうえお順）でソート
   filtered.sort((a, b) => (b.is_featured || 0) - (a.is_featured || 0) || a.name.localeCompare(b.name, 'ja'));
