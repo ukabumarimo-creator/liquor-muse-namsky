@@ -199,6 +199,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
         <option value="Tequila">Tequila</option>
         <option value="Cocktail">Cocktail</option>
         <option value="Other Liqueur">Other Liqueur</option>
+        <option value="Food">Food</option>
       </select>
     </div>
 
@@ -434,7 +435,7 @@ async function deleteDrink(i, event){
 }
 
 function renderTypes(){
-  const types = ["Whisky", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur"];
+  const types = ["Whisky", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Food"];
   document.getElementById("typeArea").innerHTML = `<div class="tag-btn ${selectedType===''?'active':''}" onclick="selectedType='';selectedSubType='';render()">ALL</div>` + 
     types.map(t => `<div class="tag-btn ${selectedType===t?'active':''}" onclick="selectedType='${t}';selectedSubType='';render()">${t}</div>`).join("");
 }
