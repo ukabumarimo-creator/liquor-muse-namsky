@@ -178,7 +178,7 @@ async function fetchDrinks() {
 
 function render(){
   menuGrid.innerHTML = "";
-  const isSecretInput = searchInput.value.toLowerCase() === "secret";
+  const isSecretInput = searchInput.value.toLowerCase() === "もっと美術館";
 
 const filtered = drinks.filter(drink => {
   // 1. 検索窓が「secret」のとき ➔ 隠しメニュー以外はすべて非表示
