@@ -178,22 +178,31 @@ async function fetchDrinks() {
 
 function render(){
   menuGrid.innerHTML = "";
-  const isSecretUnlocked = searchInput.value.toLowerCase() === "secret";
-  // 1. まず検索やタグで絞り込む（既存の処理）
-  const filtered = drinks.filter(drink => {
-    if (drink.is_hidden && !isSecretUnlocked) {
-      return false;
-    }
-    const matchSearch = isSecretUnlocked ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
-    const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
-    const matchType = selectedType === "" || drink.type === selectedType;
-    const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
-    let matchPrice = true;
-    if(priceSearch.value) {
-      matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
-    }
-    return matchSearch && matchTag && matchType && matchSubType && matchPrice;
-  });
+  const isSecretInput = searchInput.value.toLowerCase() === "secret";
+
+const filtered = drinks.filter(drink => {
+  // 1. 検索窓が「secret」のとき ➔ 隠しメニュー以外はすべて非表示
+  if (isSecretInput && !drink.is_hidden) {
+    return false;
+  }
+  
+  // 2. 通常時（secret以外） ➔ 管理者モードでないなら、隠しメニューは非表示
+  if (!isSecretInput && drink.is_hidden && !adminMode) {
+    return false;
+  }
+
+  // 3. 検索文字の一致判定（secret入力時は名前検索をスルーする）
+  const matchSearch = isSecretInput ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
+  
+  const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
+  const matchType = selectedType === "" || drink.type === selectedType;
+  const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
+  let matchPrice = true;
+  if(priceSearch.value) {
+    matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
+  }
+  return matchSearch && matchTag && matchType && matchSubType && matchPrice;
+});
 
   // ⭐️ 2. 【追加】おすすめ優先 ＆ 名前順でソートする
   filtered.sort((a, b) => {
