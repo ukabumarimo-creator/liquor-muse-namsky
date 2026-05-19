@@ -349,8 +349,9 @@ const filtered = drinks.filter(drink => {
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
     card.className = "card";
-    card.setAttribute("onclick", `openDetailModal_new(${JSON.stringify(drink).replace(/"/g, '&quot;')})`);
-    
+    card.addEventListener("click", () => {
+      openDetailModal_new(drink);
+    });
     // ⭐️【追加】おすすめ商品の場合だけバッジを表示する
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
     const displayPrice = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
