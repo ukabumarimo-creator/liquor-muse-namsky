@@ -178,10 +178,13 @@ async function fetchDrinks() {
 
 function render(){
   menuGrid.innerHTML = "";
-  
+  const isSecretUnlocked = searchInput.value.toLowerCase() === "secret";
   // 1. まず検索やタグで絞り込む（既存の処理）
   const filtered = drinks.filter(drink => {
-    const matchSearch = drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
+    if (drink.is_hidden && !isSecretUnlocked) {
+      return false;
+    }
+    const matchSearch = isSecretUnlocked ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
     const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
     const matchType = selectedType === "" || drink.type === selectedType;
     const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
@@ -207,10 +210,11 @@ function render(){
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
     card.className = "card";
-    card.setAttribute("onclick", `openDetailModal(${drinks.indexOf(drink)}, event)`);
+    card.setAttribute("onclick", `openDetailModal_new(${JSON.stringify(drink).replace(/"/g, '&quot;')})`);
     
     // おすすめの場合だけ「RECOMMEND」という文字（バッジ）を表示する仕組み
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
+    const displayPrice = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
 
     card.innerHTML = `
       <div style="position: relative;">
@@ -227,6 +231,30 @@ function render(){
   renderTypes(); renderSubTypes(); renderTags();
 }
 
+function openDetailModal_new(drink) {
+  document.getElementById("detailImg").src = drink.image || '';
+  document.getElementById("detailType").textContent = drink.type;
+  document.getElementById("detailSubtype").textContent = drink.sub_type || '';
+  document.getElementById("detailTitle").textContent = drink.name;
+
+  document.getElementById("detailPrice").textContent = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
+  document.getElementById("detailDesc").textContent = drink.description || '説明はありません。';
+  
+  const tagsContainer = document.getElementById("detailTags");
+  tagsContainer.innerHTML = "";
+  if (drink.tags && drink.tags.length > 0) {
+    drink.tags.forEach(tag => {
+      const span = document.createElement("span");
+      span.className = "detail-tag-item";
+      span.textContent = tag;
+      tagsContainer.appendChild(span);
+    });
+  }
+  
+  detailModal.classList.add("active");
+  document.getElementById("detailDesc").scrollTop = 0;
+}
+  
 function openDetailModal(index, event) {
   const drink = drinks[index];
   document.getElementById("detailImg").src = drink.image || '';
