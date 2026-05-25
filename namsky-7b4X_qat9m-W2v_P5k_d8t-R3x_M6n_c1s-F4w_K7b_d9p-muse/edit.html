@@ -87,7 +87,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .edit-btn, .delete-btn{ flex:1; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold; font-size: 0.75rem; }
 .edit-btn{ background:var(--gold); color:black; }
 .delete-btn{ background:#333; color:#ff6b6b; }
-/* おすすめバッジのスタイル */
+
 .rec-badge {
   position: absolute;
   top: 10px;
@@ -105,7 +105,6 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 
 @media(min-width: 768px) { 
   .menu-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
-  .card img {  }
 }
 
 .fab{ position:fixed; right:20px; bottom:30px; width:64px; height:64px; border-radius:50%; border:none; background:var(--gold); color:black; font-size:1.8rem; cursor:pointer; z-index:200; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
@@ -119,12 +118,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .save-btn{ width:100%; border:none; background:var(--gold); color:black; padding:18px; border-radius:16px; font-weight:bold; font-size:1.1rem; cursor:pointer; margin-top: 10px; }
 .loading-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:400; justify-content:center; align-items:center; color:var(--gold); font-weight:bold; }
 
-/* 詳細フロートポップアップ（スクロール機能付きに強化） */
-.detail-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:350; backdrop-filter: blur(8px); padding:20px; }
-.detail-modal.active { display:flex; }
-.detail-content { width:100%; max-width:450px; max-height: 85vh; background:#161616; border:1px solid rgba(212,175,55,0.3); border-radius:24px; overflow:hidden; box-shadow:0 15px 30px rgba(0,0,0,0.5); animation: floatUp 0.3s ease; display: flex; flex-direction: column; }
-/* --- ここから追加・修正 --- */
-/* 詳細フロートポップアップ（全体スクロールに強化） */
+/* 詳細フロートポップアップ（全体スクロール強化版） */
 .detail-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:350; backdrop-filter: blur(8px); padding:20px; }
 .detail-modal.active { display:flex; }
 .detail-content { width:100%; max-width:450px; max-height: 90vh; background:#161616; border:1px solid rgba(212,175,55,0.3); border-radius:24px; overflow:hidden; box-shadow:0 15px 30px rgba(0,0,0,0.5); animation: floatUp 0.3s ease; display: flex; flex-direction: column; }
@@ -138,7 +132,6 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .detail-title { font-size:1.4rem; color:#fff; font-weight:700; margin-bottom:8px; line-height:1.3; }
 .detail-price { color:var(--gold); font-size:1.2rem; font-weight:bold; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; }
 
-/* 項目ごとのすっきりした枠組みデザイン */
 .detail-section { margin-bottom: 16px; background: rgba(255,255,255,0.03); padding: 12px 14px; border-radius: 10px; border-left: 3px solid var(--gold); }
 .detail-section-title { font-size: 0.8rem; color: var(--gold); font-weight: bold; margin-bottom: 4px; letter-spacing: 1px; }
 .detail-section-content { color: #ccc; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; }
@@ -146,25 +139,6 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .detail-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top: 15px; margin-bottom:20px; }
 .detail-tag-item { background:#2a2a2a; color:var(--gold); padding:4px 10px; border-radius:6px; font-size:0.75rem; border:1px solid rgba(212,175,55,0.1); }
 .detail-close-btn { width:100%; border:none; background:#222; color:#fff; padding:14px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer; border:1px solid #333; position: sticky; bottom: 0; }
-/* --- ここまで追加・修正 --- */
-@keyframes floatUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.detail-img { width:100%; height: 200px; object-fit:cover; flex-shrink: 0; }
-.detail-body { padding:20px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; }
-.detail-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-shrink: 0; }
-.detail-type { color:var(--gold); font-size:0.8rem; font-weight:bold; }
-.detail-subtype { color:#aaa; font-size:0.8rem; }
-.detail-title { font-size:1.4rem; color:#fff; font-weight:700; margin-bottom:8px; line-height:1.3; flex-shrink: 0; }
-.detail-price { color:var(--gold); font-size:1.2rem; font-weight:bold; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; flex-shrink: 0; }
-
-/* 修正：説明が長い場合にスクロールさせる設定 */
-.detail-desc { color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:18px; white-space: pre-wrap; max-height: 150px; overflow-y: auto; padding-right: 4px; }
-/* スクロールバーのデザインをお店の雰囲気に合わせる */
-.detail-desc::-webkit-scrollbar { width: 4px; }
-.detail-desc::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 999px; }
-
-.detail-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; flex-shrink: 0; }
-.detail-tag-item { background:#2a2a2a; color:var(--gold); padding:4px 10px; border-radius:6px; font-size:0.75rem; border:1px solid rgba(212,175,55,0.1); }
-.detail-close-btn { width:100%; border:none; background:#222; color:#fff; padding:14px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer; border:1px solid #333; margin-top: auto; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -200,7 +174,6 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
       <div id="detailTitle" class="detail-title"></div>
       <div id="detailPrice" class="detail-price"></div>
       
-      <!-- 項目が動的に入るエリア -->
       <div id="detailSections"></div>
       
       <div id="detailTags" class="detail-tags"></div>
@@ -215,7 +188,21 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
   <div class="modal-content">
     <h2 id="modalTitle" style="margin-bottom:25px; color:var(--gold);">Menu Item</h2>
     <div class="form-group"><label>お酒の名前</label><input type="text" id="nameInput"></div>
-    <div class="form-group"><label>写真 (自動圧縮されます)</label><input type="file" id="imageInput" accept="image/*"><img id="preview" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin-top:15px; display:none;"></div>
+    
+    <div class="form-group">
+      <label>商品写真</label>
+      <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button type="button" onclick="document.getElementById('imageCaptureInput').click()" style="flex: 1; padding: 12px; background: #222; border: 1px solid var(--gold); color: var(--gold); border-radius: 8px; font-weight: bold; cursor: pointer;">
+          📸 その場で撮影
+        </button>
+        <button type="button" onclick="document.getElementById('imageGalleryInput').click()" style="flex: 1; padding: 12px; background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          🖼 ギャラリーから選択
+        </button>
+      </div>
+      <input type="file" id="imageCaptureInput" accept="image/*" capture="environment" style="display: none;">
+      <input type="file" id="imageGalleryInput" accept="image/*" style="display: none;">
+      <img id="preview" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin-top:15px; display:none;">
+    </div>
     
     <div class="form-group"><label>カテゴリー</label>
       <select id="typeInput" onchange="toggleSubTypeInput()">
@@ -230,33 +217,46 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
       </select>
     </div>
 
+    <div class="form-group" id="subTypeGroup" style="display:none;">
+      <label>ウイスキーの産地</label>
+      <select id="subTypeInput">
+        <option value="スコッチ">スコッチ</option>
+        <option value="ジャパニーズ">ジャパニーズ</option>
+        <option value="アイリッシュ">アイリッシュ</option>
+        <option value="アメリカン">アメリカン</option>
+        <option value="カナディアン">カナディアン</option>
+        <option value="アイラ">アイラ</option>
+        <option value="その他">その他</option>
+      </select>
+    </div>
+
     <div class="form-group" style="border-top: 1px dashed #444; padding-top: 15px; margin-top: 25px;">
-  <label style="color: #fff; font-size: 1rem; margin-bottom: 15px;">詳細情報（空欄の項目はお客さん画面で非表示になります）</label>
-</div>
-<div class="form-group">
-  <label>地域 (REGION)</label>
-  <input type="text" id="descRegion" placeholder="例: スペイサイド、京都 など">
-</div>
-<div class="form-group">
-  <label>蒸留所 (DISTILLERY)</label>
-  <input type="text" id="descDistillery" placeholder="例: マッカラン蒸留所">
-</div>
-<div class="form-group">
-  <label>特徴 (FEATURES)</label>
-  <textarea id="descFeatures" rows="3" placeholder="お酒の背景や、こだわりの特徴など"></textarea>
-</div>
-<div class="form-group">
-  <label>官能 (TASTING NOTES)</label>
-  <textarea id="descTasting" rows="2" placeholder="例: フルーティー、スモーキー、バニラのような甘さ"></textarea>
-</div>
-<div class="form-group">
-  <label>おすすめの飲み方 (RECOMMENDED)</label>
-  <input type="text" id="descDrinking" placeholder="例: ハイボール、ロック、ストレート">
-</div>
+      <label style="color: #fff; font-size: 1rem; margin-bottom: 15px;">詳細情報（空欄の項目はお客さん画面で非表示になります）</label>
+    </div>
+    <div class="form-group">
+      <label>地域 (REGION)</label>
+      <input type="text" id="descRegion" placeholder="例: スペイサイド、京都 など">
+    </div>
+    <div class="form-group">
+      <label>蒸留所 (DISTILLERY)</label>
+      <input type="text" id="descDistillery" placeholder="例: マッカラン蒸留所">
+    </div>
+    <div class="form-group">
+      <label>特徴 (FEATURES)</label>
+      <textarea id="descFeatures" rows="3" placeholder="お酒の背景や、こだわりの特徴など"></textarea>
+    </div>
+    <div class="form-group">
+      <label>官能 (TASTING NOTES)</label>
+      <textarea id="descTasting" rows="2" placeholder="例: フルーティー、スモーキー、バニラのような甘さ"></textarea>
+    </div>
+    <div class="form-group">
+      <label>おすすめの飲み方 (RECOMMENDED)</label>
+      <input type="text" id="descDrinking" placeholder="例: ハイボール、ロック、ストレート">
+    </div>
 
     <div class="form-group"><label>価格 (円)</label><input type="number" id="priceInput"></div>
     <div class="form-group"><label>タグ (カンマ区切り)</label><input type="text" id="tagsInput" placeholder="スモーキー, 限定品 など"></div>
-    <div class="form-group"><label>説明</label><textarea id="descInput" rows="4"></textarea></div>
+    
     <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin: 20px 0;">
       <input type="checkbox" id="featuredInput" style="width: 24px; height: 24px; accent-color: var(--gold); cursor: pointer;">
       <label for="featuredInput" style="margin-bottom: 0; cursor: pointer; color: var(--gold); font-weight: bold;">★ おすすめ商品（一覧の上部に優先表示）</label>
@@ -273,7 +273,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 <div class="modal" id="adminModal">
   <div class="modal-content" style="padding-bottom:100px;">
     <h2 style="margin-bottom:20px; color:var(--gold);">Admin Login</h2>
-    <div class="form-group"><input type="password" id="passwordInput" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="4桁のパスワード"></div>
+    <div class="form-group"><input type="password" id="passwordInput" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="4桁 of パスワード"></div>
     <button class="save-btn" id="loginBtn">認証</button>
   </div>
 </div>
@@ -292,7 +292,6 @@ const searchInput = document.getElementById("searchInput");
 const priceSearch = document.getElementById("priceSearch");
 const modal = document.getElementById("modal");
 const preview = document.getElementById("preview");
-const imageInput = document.getElementById("imageInput");
 const loadingOverlay = document.getElementById("loadingOverlay");
 const detailModal = document.getElementById("detailModal");
 
@@ -360,27 +359,21 @@ function render(){
   menuGrid.innerHTML = "";
   const isSecretInput = searchInput.value.toLowerCase() === "もっと美術館";
 
-const filtered = drinks.filter(drink => {
-  // 1. 検索窓が「secret」のとき ➔ 隠しメニュー以外はすべて非表示
-  if (isSecretInput && !drink.is_hidden) {
-    return false;
-  }
-  if (!isSecretInput && drink.is_hidden && !adminMode) {
-    return false;
-  }
-  const matchSearch = isSecretInput ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
-  
-  const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
-  const matchType = selectedType === "" || drink.type === selectedType;
-  const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
-  let matchPrice = true;
-  if(priceSearch.value) {
-    matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
-  }
-  return matchSearch && matchTag && matchType && matchSubType && matchPrice;
-});
+  const filtered = drinks.filter(drink => {
+    if (isSecretInput && !drink.is_hidden) return false;
+    if (!isSecretInput && drink.is_hidden && !adminMode) return false;
+    const matchSearch = isSecretInput ? true : drink.name.toLowerCase().includes(searchInput.value.toLowerCase());
+    
+    const matchTag = selectedTag === "" || (drink.tags && drink.tags.includes(selectedTag));
+    const matchType = selectedType === "" || drink.type === selectedType;
+    const matchSubType = selectedSubType === "" || drink.sub_type === selectedSubType;
+    let matchPrice = true;
+    if(priceSearch.value) {
+      matchPrice = Math.floor(Number(priceSearch.value)/1000) === Math.floor(drink.price/1000);
+    }
+    return matchSearch && matchTag && matchType && matchSubType && matchPrice;
+  });
 
-  // ⭐️【追加】おすすめ優先 ＆ 名前順（A-Z・あいうえお順）でソート
   filtered.sort((a, b) => (b.is_featured || 0) - (a.is_featured || 0) || a.name.localeCompare(b.name, 'ja'));
 
   filtered.forEach((drink, index)=>{
@@ -389,7 +382,6 @@ const filtered = drinks.filter(drink => {
     card.addEventListener("click", () => {
       openDetailModal_new(drink);
     });
-    // ⭐️【追加】おすすめ商品の場合だけバッジを表示する
     const recommendBadge = drink.is_featured ? `<span class="rec-badge">RECOMMEND</span>` : '';
     const displayPrice = drink.is_hidden ? "priceless" : `¥${Number(drink.price).toLocaleString()}`;
     
@@ -488,8 +480,10 @@ function toggleSubTypeInput() {
   document.getElementById("subTypeGroup").style.display = (document.getElementById("typeInput").value === "Whisky") ? "block" : "none";
 }
 
+// 💾 保存処理
 document.getElementById("saveBtn").addEventListener("click", async () => {
-  const file = imageInput.files[0];
+  // カメラ撮影かギャラリー、どちらか選ばれている画像ファイルを取得
+  const file = document.getElementById("imageCaptureInput").files[0] || document.getElementById("imageGalleryInput").files[0];
   const typeValue = document.getElementById("typeInput").value;
   const subTypeValue = typeValue === "Whisky" ? document.getElementById("subTypeInput").value : null;
   let finalImageUrl = currentImageUrl;
@@ -499,7 +493,6 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     if (uploadedUrl) finalImageUrl = uploadedUrl;
   }
   
-  // 5つの入力欄のテキストを、裏側で【項目名】の形で自動結合
   let combinedDescription = "";
   const regionVal = document.getElementById("descRegion").value.trim();
   const distVal = document.getElementById("descDistillery").value.trim();
@@ -578,15 +571,18 @@ document.getElementById("logoutBtn").addEventListener("click", () => { adminMode
 
 function openAddModal(){ editingIndex = null; document.getElementById("modalTitle").textContent = "Add New Drink"; clearForm(); toggleSubTypeInput(); modal.classList.add("active"); }
 
+// 🛠 修正された編集処理（エラーを回避して安全に動く）
 function editDrink(i, event){
   if(event) event.stopPropagation();
   const d = drinks[i]; editingIndex = i; document.getElementById("modalTitle").textContent = "Edit Drink";
   document.getElementById("nameInput").value = d.name; document.getElementById("typeInput").value = d.type;
   toggleSubTypeInput();
-  if(d.type === "Whisky") document.getElementById("subTypeInput").value = d.sub_type || "";
+  
+  if(d.type === "Whisky" && document.getElementById("subTypeInput")) {
+    document.getElementById("subTypeInput").value = d.sub_type || "スコッチ";
+  }
   document.getElementById("priceInput").value = d.price;
   
-  // 1つのテキストから5つの欄に分解する処理
   const rawDesc = d.description || '';
   const getSectionContent = (key) => {
     const regex = new RegExp(`【${key}】\\s*([\\s\\S]*?)(?=(?:【|$))`, 'i');
@@ -605,7 +601,7 @@ function editDrink(i, event){
   } else {
     document.getElementById("descRegion").value = "";
     document.getElementById("descDistillery").value = "";
-    document.getElementById("descFeatures").value = rawDesc; // 昔のデータは一旦「特徴」欄に入れる
+    document.getElementById("descFeatures").value = rawDesc;
     document.getElementById("descTasting").value = "";
     document.getElementById("descDrinking").value = "";
   }
@@ -613,21 +609,33 @@ function editDrink(i, event){
   document.getElementById("tagsInput").value = d.tags ? d.tags.join(",") : ""; 
   document.getElementById("featuredInput").checked = d.is_featured || false;
   document.getElementById("hiddenInput").checked = d.is_hidden || false;
-  currentImageUrl = d.image; preview.src = d.image; preview.style.display = "block"; modal.classList.add("active");
+  
+  currentImageUrl = d.image; 
+  if (d.image) {
+    preview.src = d.image; preview.style.display = "block";
+  } else {
+    preview.src = ""; preview.style.display = "none";
+  }
+  modal.classList.add("active");
 }
 
-imageInput.addEventListener("change", (e) => {
+// 📸 カメラ・ギャラリー共通のプレビュー処理
+function handleImageSelect(e) {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (ev) => { preview.src = ev.target.result; preview.style.display = "block"; };
+    reader.onload = function(ev) { preview.src = ev.target.result; preview.style.display = "block"; }
     reader.readAsDataURL(file);
   }
-});
+}
+document.getElementById("imageCaptureInput").addEventListener("change", handleImageSelect);
+document.getElementById("imageGalleryInput").addEventListener("change", handleImageSelect);
 
+// 🧹 フォームクリア
 function clearForm(){ 
   document.getElementById("nameInput").value=""; document.getElementById("priceInput").value=""; 
-  document.getElementById("tagsInput").value=""; document.getElementById("subTypeInput").value="";
+  document.getElementById("tagsInput").value=""; 
+  if(document.getElementById("subTypeInput")) document.getElementById("subTypeInput").value="スコッチ";
   
   document.getElementById("descRegion").value = "";
   document.getElementById("descDistillery").value = "";
@@ -637,8 +645,11 @@ function clearForm(){
   
   document.getElementById("featuredInput").checked = false;
   document.getElementById("hiddenInput").checked = false;
-  imageInput.value = ""; preview.style.display="none"; currentImageUrl=""; 
+  document.getElementById("imageCaptureInput").value = ""; 
+  document.getElementById("imageGalleryInput").value = ""; 
+  preview.style.display="none"; preview.src=""; currentImageUrl=""; 
 }
+
 searchInput.addEventListener("input", render); priceSearch.addEventListener("input", render);
 
 window.onclick = (e) => { 
