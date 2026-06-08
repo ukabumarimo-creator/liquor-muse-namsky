@@ -540,7 +540,7 @@ async function deleteDrink(i, event){
 }
 
 function renderTypes(){
-  const types = ["Whisky", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Food"];
+  const types = ["whiskey(Whisky)", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Food"];
   document.getElementById("typeArea").innerHTML = `<div class="tag-btn ${selectedType===''?'active':''}" onclick="selectedType='';selectedSubType='';render()">ALL</div>` + 
     types.map(t => `<div class="tag-btn ${selectedType===t?'active':''}" onclick="selectedType='${t}';selectedSubType='';render()">${t}</div>`).join("");
 }
