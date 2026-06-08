@@ -206,7 +206,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
     
     <div class="form-group"><label>カテゴリー</label>
       <select id="typeInput" onchange="toggleSubTypeInput()">
-        <option value="whiskey(Whisky)">whiskey(Whisky)</option>
+        <option value="Whiskey(Whisky)">Whiskey(Whisky)</option>
         <option value="Gin">Gin</option>
         <option value="Vodka">Vodka</option>
         <option value="Rum">Rum</option>
@@ -336,9 +336,9 @@ async function uploadImage(file, category, subCategory) {
   const compressedBlob = await processImage(file);
   
   let folderPath = '';
-  if (category === "Whisky") {
+  if (category === "Whiskey(Whisky)") {
     const engSubFolder = subCategory ? (subFolderMap[subCategory] || 'unspecified') : 'unspecified';
-    folderPath = `Whisky/${engSubFolder}/`;
+    folderPath = `Whiskey(Whisky)/${engSubFolder}/`;
   } else {
     folderPath = category ? `${category}/` : 'Uncategorized/';
   }
@@ -477,7 +477,7 @@ function closeDetailModal() {
 }
 
 function toggleSubTypeInput() {
-  document.getElementById("subTypeGroup").style.display = (document.getElementById("typeInput").value === "Whisky") ? "block" : "none";
+  document.getElementById("subTypeGroup").style.display = (document.getElementById("typeInput").value === "Whiskey(Whisky)") ? "block" : "none";
 }
 
 // 💾 保存処理
@@ -540,14 +540,14 @@ async function deleteDrink(i, event){
 }
 
 function renderTypes(){
-  const types = ["whiskey(Whisky)", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Food"];
+  const types = ["Whiskey(Whisky)", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Food"];
   document.getElementById("typeArea").innerHTML = `<div class="tag-btn ${selectedType===''?'active':''}" onclick="selectedType='';selectedSubType='';render()">ALL</div>` + 
     types.map(t => `<div class="tag-btn ${selectedType===t?'active':''}" onclick="selectedType='${t}';selectedSubType='';render()">${t}</div>`).join("");
 }
 
 function renderSubTypes(){
   const subArea = document.getElementById("subTypeArea");
-  if (selectedType !== "Whisky") { subArea.style.display = "none"; return; }
+  if (selectedType !== "Whiskey(Whisky)") { subArea.style.display = "none"; return; }
   subArea.style.display = "flex";
   const subs = ["スコッチ", "ジャパニーズ", "アイリッシュ", "アメリカン", "カナディアン", "アイラ", "その他"];
   subArea.innerHTML = `<div class="tag-btn ${selectedSubType===''?'active':''}" onclick="selectedSubType='';render()">産地すべて</div>` + 
@@ -578,7 +578,7 @@ function editDrink(i, event){
   document.getElementById("nameInput").value = d.name; document.getElementById("typeInput").value = d.type;
   toggleSubTypeInput();
   
-  if(d.type === "Whisky" && document.getElementById("subTypeInput")) {
+  if(d.type === "Whiskey(Whisky)" && document.getElementById("subTypeInput")) {
     document.getElementById("subTypeInput").value = d.sub_type || "スコッチ";
   }
   document.getElementById("priceInput").value = d.price;
