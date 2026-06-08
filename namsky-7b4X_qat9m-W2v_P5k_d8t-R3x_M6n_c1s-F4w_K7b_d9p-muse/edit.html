@@ -31,7 +31,7 @@ body{
 }
 
 header{ padding:40px 20px 20px; text-align: center; }
-header h1{ color:var(--gold); letter-spacing:4px; font-size:1.5rem; }
+header h1{ color:var(--gold); letter-spacing:4px; font-size:1.3rem; }
 header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 
 #logoutBtn{ display:none; position:absolute; top:20px; right:20px; background:rgba(26,26,26,0.8); color:var(--gold); border:1px solid var(--gold); padding:8px 14px; border-radius:999px; font-size: 0.8rem; }
@@ -193,10 +193,10 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
       <label>商品写真</label>
       <div style="display: flex; gap: 10px; margin-bottom: 10px;">
         <button type="button" onclick="document.getElementById('imageCaptureInput').click()" style="flex: 1; padding: 12px; background: #222; border: 1px solid var(--gold); color: var(--gold); border-radius: 8px; font-weight: bold; cursor: pointer;">
-          📸 その場で撮影
+          その場で撮影
         </button>
         <button type="button" onclick="document.getElementById('imageGalleryInput').click()" style="flex: 1; padding: 12px; background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer;">
-          🖼 ギャラリーから選択
+          ギャラリーから選択
         </button>
       </div>
       <input type="file" id="imageCaptureInput" accept="image/*" capture="environment" style="display: none;">
@@ -206,7 +206,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
     
     <div class="form-group"><label>カテゴリー</label>
       <select id="typeInput" onchange="toggleSubTypeInput()">
-        <option value="Whisky">Whisky</option>
+        <option value="Whisky">whiskey(Whisky)</option>
         <option value="Gin">Gin</option>
         <option value="Vodka">Vodka</option>
         <option value="Rum">Rum</option>
@@ -273,7 +273,7 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 <div class="modal" id="adminModal">
   <div class="modal-content" style="padding-bottom:100px;">
     <h2 style="margin-bottom:20px; color:var(--gold);">Admin Login</h2>
-    <div class="form-group"><input type="password" id="passwordInput" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="4桁 of パスワード"></div>
+    <div class="form-group"><input type="password" id="passwordInput" pattern="\d*" inputmode="numeric" maxlength="4" placeholder="パスワード"></div>
     <button class="save-btn" id="loginBtn">認証</button>
   </div>
 </div>
