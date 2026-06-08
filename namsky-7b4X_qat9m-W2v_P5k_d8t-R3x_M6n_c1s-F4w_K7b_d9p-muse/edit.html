@@ -375,7 +375,21 @@ function render(){
     return matchSearch && matchTag && matchType && matchSubType && matchPrice;
   });
 
-  filtered.sort((a, b) => (b.is_featured || 0) - (a.is_featured || 0) || a.name.localeCompare(b.name, 'ja'));
+  filtered.sort((a, b) => {
+  // おすすめ優先
+  const featuredDiff = (b.is_featured || 0) - (a.is_featured || 0);
+  if (featuredDiff !== 0) return featuredDiff;
+
+  // 写真ありを先、写真なしを後
+  const aHasImage = !!a.image;
+  const bHasImage = !!b.image;
+
+  if (aHasImage !== bHasImage) {
+    return bHasImage - aHasImage;
+  }
+
+  return a.name.localeCompare(b.name, 'ja');
+});
 
   filtered.forEach((drink, index)=>{
     const card = document.createElement("div");
@@ -388,7 +402,10 @@ function render(){
     
     card.innerHTML = `
       <div style="position: relative;">
-        <img src="${drink.image || ''}" loading="lazy">
+        ${drink.image
+  ? `<img src="${drink.image}" loading="lazy">`
+  : ''
+}
         ${recommendBadge}
       </div>
       <div class="card-content">
@@ -403,7 +420,14 @@ function render(){
 }
 
 function openDetailModal_new(drink) {
-  document.getElementById("detailImg").src = drink.image || '';
+  const detailImg = document.getElementById("detailImg");
+
+if (drink.image) {
+  detailImg.src = drink.image;
+  detailImg.style.display = "block";
+} else {
+  detailImg.style.display = "none";
+}
   document.getElementById("detailType").textContent = drink.type;
   document.getElementById("detailSubtype").textContent = drink.sub_type || '';
   document.getElementById("detailTitle").textContent = drink.name;
