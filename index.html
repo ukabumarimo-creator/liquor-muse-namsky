@@ -361,7 +361,7 @@ function renderTypes(){
 
 function renderSubTypes(){
   const subArea = document.getElementById("subTypeArea");
-  if (selectedType !== "Whisky") { subArea.style.display = "none"; return; }
+  if (selectedType !== "Whiskey(Whisky)") { subArea.style.display = "none"; return; }
   subArea.style.display = "flex";
   const subs = ["スコッチ", "ジャパニーズ", "アイリッシュ", "アメリカン", "カナディアン", "アイラ", "その他"];
   subArea.innerHTML = `<div class="tag-btn ${selectedSubType===''?'active':''}" onclick="selectedSubType='';render()">産地すべて</div>` + 
