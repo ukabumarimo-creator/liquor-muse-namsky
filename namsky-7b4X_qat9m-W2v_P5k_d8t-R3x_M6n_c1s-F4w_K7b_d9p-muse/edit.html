@@ -534,7 +534,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   // カメラ撮影かギャラリー、どちらか選ばれている画像ファイルを取得
   const file = document.getElementById("imageCaptureInput").files[0] || document.getElementById("imageGalleryInput").files[0];
   const typeValue = document.getElementById("typeInput").value;
-  const subTypeValue = typeValue === "Whisky" ? document.getElementById("subTypeInput").value : null;
+  const subTypeValue = typeValue === "Whiskey(Whisky)" ? document.getElementById("subTypeInput").value : null;
   let finalImageUrl = currentImageUrl;
   
   if (file) {
