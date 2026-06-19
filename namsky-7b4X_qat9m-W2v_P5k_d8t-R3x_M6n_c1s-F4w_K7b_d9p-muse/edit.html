@@ -610,11 +610,40 @@ function renderTypes(){
 
 function renderSubTypes(){
   const subArea = document.getElementById("subTypeArea");
-  if (selectedType !== "Whiskey(Whisky)") { subArea.style.display = "none"; return; }
+
+  if(selectedType === ""){
+    subArea.style.display = "none";
+    return;
+  }
+
+  const subs = [
+    ...new Set(
+      drinks
+        .filter(d => d.type === selectedType)
+        .map(d => d.sub_type)
+        .filter(s => s && s.trim() !== "")
+    )
+  ];
+
+  if(subs.length === 0){
+    subArea.style.display = "none";
+    return;
+  }
+
   subArea.style.display = "flex";
-  const subs = ["スコッチ", "ジャパニーズ", "アイリッシュ", "アメリカン", "カナディアン", "アイラ", "その他"];
-  subArea.innerHTML = `<div class="tag-btn ${selectedSubType===''?'active':''}" onclick="selectedSubType='';render()">産地すべて</div>` + 
-    subs.map(s => `<div class="tag-btn ${selectedSubType===s?'active':''}" onclick="selectedSubType='${s}';render()">${s}</div>`).join("");
+
+  subArea.innerHTML =
+    `<div class="tag-btn ${selectedSubType===''?'active':''}"
+      onclick="selectedSubType='';render()">
+      すべて
+    </div>`
+    +
+    subs.map(s =>
+      `<div class="tag-btn ${selectedSubType===s?'active':''}"
+        onclick="selectedSubType='${s}';render()">
+        ${s}
+      </div>`
+    ).join("");
 }
 
 function renderTags(){
