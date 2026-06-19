@@ -254,6 +254,8 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
         <option value="アイラ">アイラ</option>
         <option value="その他">その他</option>
       </select>
+    </div>
+    <div class="form-group" id="otherLabelGroup" style="display:none;">
       <label>サブラベル</label>
       <input type="text" id="otherLabelInput"
              placeholder="例: バーボン、アグリコール、クラフトジン">
@@ -601,7 +603,7 @@ async function deleteDrink(i, event){
 }
 
 function renderTypes(){
-  const types = ["Whiskey(Whisky)", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Food"];
+  const types = ["Whiskey(Whisky)", "Gin", "Vodka", "Rum", "Tequila", "Cocktail", "Other Liqueur","Other","Food"];
   document.getElementById("typeArea").innerHTML = `<div class="tag-btn ${selectedType===''?'active':''}" onclick="selectedType='';selectedSubType='';render()">ALL</div>` + 
     types.map(t => `<div class="tag-btn ${selectedType===t?'active':''}" onclick="selectedType='${t}';selectedSubType='';render()">${t}</div>`).join("");
 }
@@ -638,6 +640,11 @@ function editDrink(i, event){
   const d = drinks[i]; editingIndex = i; document.getElementById("modalTitle").textContent = "Edit Drink";
   document.getElementById("nameInput").value = d.name; document.getElementById("typeInput").value = d.type;
   toggleSubTypeInput();
+
+  if(d.type !== "Whiskey(Whisky)"){
+    document.getElementById("otherLabelInput").value =
+      d.sub_type || "";
+  }
   
   if(d.type === "Whiskey(Whisky)" && document.getElementById("subTypeInput")) {
     document.getElementById("subTypeInput").value = d.sub_type || "スコッチ";
