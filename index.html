@@ -409,8 +409,14 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 
 <script>
 
-function showArchiveConfirm(){document.getElementById('archiveMain').classList.add('hidden');document.getElementById('archiveConfirm').classList.add('active');}
-function cancelArchive(){document.getElementById('archiveConfirm').classList.remove('active');document.getElementById('archiveMain').classList.remove('hidden');}
+function showArchiveConfirm(){
+  document.getElementById('archiveMain').style.display = 'none';
+  document.getElementById('archiveConfirm').style.display = 'block';
+}
+function cancelArchive(){
+  document.getElementById('archiveConfirm').style.display = 'none';
+  document.getElementById('archiveMain').style.display = 'block';
+}
 function openArchive(){document.getElementById('archiveOverlay').classList.add('hidden');}
   
 const SUPABASE_URL = 'https://sqoyhsruvfcwwtiytykq.supabase.co';
