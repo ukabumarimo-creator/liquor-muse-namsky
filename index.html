@@ -135,9 +135,59 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 .detail-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top: 15px; margin-bottom:20px; }
 .detail-tag-item { background:#2a2a2a; color:var(--gold); padding:4px 10px; border-radius:6px; font-size:0.75rem; border:1px solid rgba(212,175,55,0.1); }
 .detail-close-btn { width:100%; border:none; background:#222; color:#fff; padding:14px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer; border:1px solid #333; position: sticky; bottom: 0; }
+
+/* ================================
+   旧HP・アーカイブ表示
+   ================================ */
+.archive-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.68);z-index:1000;display:flex;justify-content:center;align-items:center;padding:20px;text-align:center;transition:opacity 0.35s ease, visibility 0.35s ease;}
+.archive-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.archive-box{width:100%;max-width:430px;padding:35px 25px;background:rgba(10,10,10,0.88);border:1px solid rgba(212,175,55,0.35);border-radius:20px;box-shadow:0 15px 40px rgba(0,0,0,0.7);backdrop-filter:blur(8px);}
+.archive-title{color:var(--gold);font-size:1.15rem;font-weight:bold;letter-spacing:2px;margin-bottom:15px;}
+.archive-text{color:#aaa;font-size:0.82rem;line-height:1.8;margin-bottom:25px;}
+.archive-btn{width:100%;border:1px solid rgba(212,175,55,0.5);background:#181818;color:var(--gold);padding:13px 15px;border-radius:10px;font-size:0.9rem;cursor:pointer;transition:0.2s;}
+.archive-btn:active{transform:scale(0.98);background:#222;}
+.archive-confirm{display:none;}
+.archive-confirm.active{display:block;}
+.archive-main.hidden{display:none;}
+
 </style>
 </head>
 <body>
+
+<!-- 旧HP・アーカイブ表示 -->
+<div class="archive-overlay" id="archiveOverlay">
+  <div class="archive-box" id="archiveMain">
+    <div class="archive-title">
+      このページは現在使用していません
+    </div>
+    <div class="archive-text">
+      このページは過去の店舗情報を保存するため、
+      アーカイブとして残しています。
+    </div>
+    <button class="archive-btn" onclick="showArchiveConfirm()">
+      アーカイブを閲覧する
+    </button>
+  </div>
+  <div class="archive-box archive-confirm" id="archiveConfirm">
+    <div class="archive-title">
+      アーカイブを閲覧します
+    </div>
+    <div class="archive-text">
+      過去のページ内容を確認するため、
+      通常の操作画面を表示します。
+    </div>
+    <button class="archive-btn" onclick="openArchive()">
+      閲覧する
+    </button>
+    <button
+      class="archive-btn"
+      onclick="cancelArchive()"
+      style="margin-top:8px;color:#888;border-color:#333;"
+    >
+      戻る
+    </button>
+  </div>
+</div>
 
 <div class="background"></div>
 <header>
@@ -189,6 +239,11 @@ header p{ margin-top:8px; color:#aaa; font-size: 0.8rem; }
 </div>
 
 <script>
+
+function showArchiveConfirm(){document.getElementById('archiveMain').classList.add('hidden');document.getElementById('archiveConfirm').classList.add('active');}
+function cancelArchive(){document.getElementById('archiveConfirm').classList.remove('active');document.getElementById('archiveMain').classList.remove('hidden');}
+function openArchive(){document.getElementById('archiveOverlay').classList.add('hidden');}
+  
 const SUPABASE_URL = 'https://sqoyhsruvfcwwtiytykq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxb3loc3J1dmZjd3d0aXl0eWtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MDU5NjUsImV4cCI6MjA5NDM4MTk2NX0.2yCIxs0QboAF6ldGBTh-YI2t9m3rwFyedrc-NkFMXT4';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
